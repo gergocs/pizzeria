@@ -6,10 +6,15 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Objects;
@@ -26,6 +31,10 @@ public class PizzeriaApplication extends Application {
 
     GridPane layout1 = new GridPane();
     GridPane layout2 = new GridPane();
+    BorderPane layout3 = new BorderPane();
+    HBox layout4 = new HBox();
+    VBox layout5 = new VBox();
+    FlowPane layout6 = new FlowPane();
 
     Text username = new Text("Username");
     Text password = new Text("Password");
@@ -95,8 +104,11 @@ public class PizzeriaApplication extends Application {
                 return;
             }
 
+            tFieldLoginUserName.clear();
+            tFieldLoginPassword.clear();
+
             System.out.println("good");
-            //window.setScene(home);
+            window.setScene(home);
         });
         Button bRegister = new Button("Register");
         bRegister.setDefaultButton(true);
@@ -194,6 +206,71 @@ public class PizzeriaApplication extends Application {
         layout2.add(bChangeToRegister, 1, 2);
         this.login = new Scene(layout2, 800, 512);
         this.register = new Scene(layout1, 800, 512);
+        createHomePage();
+    }
+
+    private void createHomePage() {
+        ImageView exitImg = null;
+        ImageView homeImg = null;
+        ImageView cartImg = null;
+        ImageView pizzaImg = null;
+        try {
+            FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
+            FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
+            FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
+            exitImg = new ImageView(new Image(input1));
+            exitImg.setFitHeight(50);
+            exitImg.setFitWidth(50);
+            homeImg = new ImageView(new Image(input2));
+            homeImg.setFitHeight(50);
+            homeImg.setFitWidth(50);
+            cartImg = new ImageView(new Image(input3));
+            cartImg.setFitHeight(50);
+            cartImg.setFitWidth(50);
+            pizzaImg = new ImageView(new Image(input4));
+            pizzaImg.setFitHeight(50);
+            pizzaImg.setFitWidth(50);
+        } catch (FileNotFoundException e) {
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(e);
+        }
+
+        Region vFiller = new Region();
+        vFiller.setPrefSize(10000,1);
+        Region hFiller1 = new Region();
+        hFiller1.setPrefSize(1,200);
+        Region hFiller2 = new Region();
+        hFiller2.setPrefSize(1,200);
+
+        Button bExit = new Button("", exitImg);
+        Button bHome = new Button("", homeImg);
+        Button bCart = new Button("", cartImg);
+        Button bPizza = new Button("", pizzaImg);
+        bExit.setOnAction(e -> this.window.setScene(login));
+        bHome.setOnAction(e -> this.window.setScene(home));
+        bCart.setOnAction(e -> this.window.setScene(home));
+        bPizza.setOnAction(e -> this.window.setScene(home));
+
+        layout5.getChildren().add(bPizza);
+        layout5.getChildren().add(hFiller1);
+        layout5.getChildren().add(bCart);
+        layout5.getChildren().add(hFiller2);
+        layout5.getChildren().add(bExit);
+
+        layout5.setBackground((new Background(new BackgroundFill(Color.rgb(187, 153, 255), CornerRadii.EMPTY, Insets.EMPTY))));
+        layout4.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
+
+        layout4.getChildren().add(vFiller);
+        layout4.getChildren().add(bHome);
+
+        layout3.setPadding(new Insets(20));
+        layout3.setTop(layout4);
+        layout3.setLeft(layout5);
+        layout3.setCenter(layout6);
+        layout3.setBottom(new BorderPane());
+
+        this.home = new Scene(layout3, 800, 512);
     }
 
     @Override
