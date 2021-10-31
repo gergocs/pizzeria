@@ -4,8 +4,7 @@ import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -23,6 +22,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.codec.digest.*;
 
 import com.pizzeria.database.*;
+import com.pizzeria.cart.Cart;
 
 public class PizzeriaApplication extends Application {
 
@@ -34,7 +34,7 @@ public class PizzeriaApplication extends Application {
     BorderPane layout3 = new BorderPane();
     HBox layout4 = new HBox();
     VBox layout5 = new VBox();
-    FlowPane layout6 = new FlowPane();
+    ScrollPane layout6 = new ScrollPane();
 
     Text username = new Text("Username");
     Text password = new Text("Password");
@@ -48,17 +48,18 @@ public class PizzeriaApplication extends Application {
     String errorMessage = "";
 
     Database database = new Database();
+    Cart cart = new Cart();
 
     private void setScenes(){
         /* TextFields */
         TextField tFieldUserName = new TextField();
-        TextField tFieldPassword = new TextField();
-        TextField tFieldPasswordAgain = new TextField();
+        PasswordField tFieldPassword = new PasswordField();
+        PasswordField tFieldPasswordAgain = new PasswordField();
         TextField tFieldPhoneNumber = new TextField();
         TextField tFieldAddress = new TextField();
 
         TextField tFieldLoginUserName = new TextField();
-        TextField tFieldLoginPassword = new TextField();
+        PasswordField tFieldLoginPassword = new PasswordField();
 
         /* Buttons */
         Button bLogin = new Button("Login");
@@ -90,6 +91,7 @@ public class PizzeriaApplication extends Application {
                         errorMessage += "Invalid username or Password";
                     }
                 } catch (SQLException ex) {
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     ex.printStackTrace();
                 }
             }
@@ -134,12 +136,30 @@ public class PizzeriaApplication extends Application {
 
             Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
 
-            /*if (!pattern.matcher(password).matches()){
+            if (!pattern.matcher(password).matches()){
                 errorMessage += "Wrong password\n";
-            }*/
+            }
 
             if (address.equals("") || address.contains(" ")){
                 errorMessage += "Wrong address\n";
+            }
+
+            if (errorMessage.equals("")){
+                database.readData("CLIENTS"
+                        ,"USERNAME=\"" + uname + "\""
+                        ,null
+                        ,null
+                        ,null
+                        ,null);
+                ResultSet rs = database.getRs();
+                try {
+                    if (rs.isBeforeFirst()){
+                        errorMessage += "Username already in use";
+                    }
+                } catch (SQLException ex) {
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    ex.printStackTrace();
+                }
             }
 
             if (!Objects.equals(errorMessage, "")){
@@ -153,8 +173,6 @@ public class PizzeriaApplication extends Application {
             }
 
             database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address);
-
-            database.close();
 
             tFieldUserName.clear();
             tFieldPassword.clear();
@@ -264,7 +282,13 @@ public class PizzeriaApplication extends Application {
         layout4.getChildren().add(vFiller);
         layout4.getChildren().add(bHome);
 
-        layout3.setPadding(new Insets(20));
+        layout6.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        layout6.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        GridPane g = generateItems();
+
+        layout6.setContent(g);
+        layout6.setMaxSize(400,500);
+
         layout3.setTop(layout4);
         layout3.setLeft(layout5);
         layout3.setCenter(layout6);
@@ -290,6 +314,72 @@ public class PizzeriaApplication extends Application {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(e);
         }
+    }
+
+    private GridPane generateItems() {
+        GridPane gridItems = new GridPane();
+        gridItems.setHgap(100);
+        gridItems.setVgap(100);
+        gridItems.setPadding(new Insets(10, 10, 10, 10));
+        database.readData("PIZZAS",null,true, "NAME", null,null);
+        ResultSet rs = database.getRs();
+
+        try{
+            boolean left = false;
+            int lineCounter = 0;
+            while(rs.next()){
+                FileInputStream fileInputStream = null;
+                try {
+                    fileInputStream = new FileInputStream("src/resources/images/add.png");
+                } catch (FileNotFoundException e) {
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    e.printStackTrace();
+                }
+                assert fileInputStream != null;
+                BorderPane item = new BorderPane();
+                ImageView addToCartImg = new ImageView(new Image(fileInputStream));
+                addToCartImg.setFitHeight(50);
+                addToCartImg.setFitWidth(50);
+                Button addToCart = new Button("", addToCartImg);
+                String name = rs.getString(2);
+                int price = rs.getInt(3);
+                String toppingIds = rs.getString(4).replace(";",",");
+
+                addToCart.setOnAction(e -> this.cart.addItem(name, price));
+
+                database.readData("TOPPINGS","TOPPINGID IN (" + toppingIds + ")",true, "NAME", null,null);
+                ResultSet rs2 = database.getRs();
+
+                StringBuilder toppings = new StringBuilder();
+
+                while (rs2.next()){
+                    toppings.append(rs2.getString(2)).append(",");
+                }
+
+                toppings.deleteCharAt(toppings.length() - 1);
+
+                item.setTop(new Text(name + " " + price));
+                item.setRight(new Text(toppings.toString()));
+                item.setBottom(addToCart);
+
+                gridItems.add(item, (left ? 1 : 0), lineCounter);
+                left = !left;
+                if (!left) {
+                    lineCounter++;
+                }
+            }
+        }catch (SQLException e){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(e);
+        }
+
+        return gridItems;
+    }
+
+    @Override
+    public void stop(){
+        System.out.println(this.cart.toString());
+        this.database.close();
     }
 
     public static void main(String[] args) {
