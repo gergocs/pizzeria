@@ -46,6 +46,7 @@ public class PizzeriaApplication extends Application {
     Text loginPassword = new Text("Password");
 
     String errorMessage = "";
+    String uname;
 
     Database database = new Database();
     Cart cart = new Cart();
@@ -67,7 +68,7 @@ public class PizzeriaApplication extends Application {
         bLogin.setLayoutX(0);
         bLogin.setLayoutY(0);
         bLogin.setOnAction(e -> {
-            String uname = tFieldLoginUserName.getText();
+            this.uname = tFieldLoginUserName.getText();
             String password = tFieldLoginPassword.getText();
             errorMessage = "";
 
@@ -183,11 +184,11 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(login);
         });
 
-        Button bChangeToRegister = new Button("chRegister");
+        Button bChangeToRegister = new Button("Register");
         bChangeToRegister.setLayoutX(250);
         bChangeToRegister.setLayoutY(220);
         bChangeToRegister.setOnAction(e -> this.window.setScene(this.register));
-        Button bChangeToLogin = new Button("chLogin");
+        Button bChangeToLogin = new Button("Login");
         bChangeToLogin.setLayoutX(200);
         bChangeToLogin.setLayoutY(220);
         bChangeToLogin.setOnAction(e -> this.window.setScene(this.login));
@@ -290,7 +291,7 @@ public class PizzeriaApplication extends Application {
         GridPane g = generateItems();
 
         homePagePizzasLayout.setContent(g);
-        homePagePizzasLayout.setMaxSize(400,500);
+        homePagePizzasLayout.setMaxSize(500,500);
 
         homePageLayout.setTop(homePageHMenuLayout);
         homePageLayout.setLeft(homePageVMenuLayout);
@@ -302,6 +303,7 @@ public class PizzeriaApplication extends Application {
 
     private void createCheckOutPage() {
         BorderPane checkOutLayout = new BorderPane();
+        VBox checkOutPayLayout = new VBox();
         ScrollPane checkOutOrdersLayout = new ScrollPane();
         HBox checkOutHMenuLayout = new HBox();
         VBox checkOutVMenuLayout = new VBox();
@@ -343,10 +345,16 @@ public class PizzeriaApplication extends Application {
         Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
+        Button bPay = new Button("Pay");
         bExit.setOnAction(e -> this.window.setScene(login));
         bHome.setOnAction(e -> this.window.setScene(home));
         bCart.setOnAction(e -> this.window.setScene(checkOut));
         bPizza.setOnAction(e -> this.window.setScene(home));
+        bPay.setOnAction(e -> {
+            this.database.writeData("orders", this.uname + ";" + this.cart.getPrice() + ";" + this.cart.getItemAsString());
+            this.cart.removeEverything();
+            this.window.setScene(home);
+        });
 
         checkOutVMenuLayout.getChildren().add(bPizza);
         checkOutVMenuLayout.getChildren().add(hFiller1);
@@ -395,7 +403,11 @@ public class PizzeriaApplication extends Application {
         }
 
         if (cart.getKeys().size() == 0){
-            g.add(new Text("Nincs a kosárba semmi :("),0,0);
+            g.add(new Text("There is nothing in your cart :("),0,0);
+        }else{
+            checkOutPayLayout.getChildren().add(new Text("Total:"));
+            checkOutPayLayout.getChildren().add(new Text(cart.getPrice().toString()));
+            checkOutPayLayout.getChildren().add(bPay);
         }
 
         checkOutOrdersLayout.setContent(g);
@@ -404,6 +416,7 @@ public class PizzeriaApplication extends Application {
         checkOutLayout.setTop(checkOutHMenuLayout);
         checkOutLayout.setLeft(checkOutVMenuLayout);
         checkOutLayout.setCenter(checkOutOrdersLayout);
+        checkOutLayout.setRight(checkOutPayLayout);
         checkOutLayout.setBottom(new BorderPane());
 
         this.checkOut = new Scene(checkOutLayout, 800, 512);
