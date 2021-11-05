@@ -27,7 +27,7 @@ import com.pizzeria.cart.Cart;
 public class PizzeriaApplication extends Application {
 
     private Stage window;
-    private Scene login, register, home, checkOut;
+    private Scene login, register, home, checkOut, user;
 
     private String errorMessage = "";
     private String uname;
@@ -224,11 +224,13 @@ public class PizzeriaApplication extends Application {
         ImageView homeImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
+        ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
             FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
             FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
+            FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
             exitImg.setFitHeight(50);
             exitImg.setFitWidth(50);
@@ -241,6 +243,9 @@ public class PizzeriaApplication extends Application {
             pizzaImg = new ImageView(new Image(input4));
             pizzaImg.setFitHeight(50);
             pizzaImg.setFitWidth(50);
+            userImg = new ImageView(new Image(input5));
+            userImg.setFitHeight(50);
+            userImg.setFitWidth(50);
         } catch (FileNotFoundException e) {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(e);
@@ -257,6 +262,7 @@ public class PizzeriaApplication extends Application {
         Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
+        Button bUser = new Button("", userImg);
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
@@ -273,6 +279,10 @@ public class PizzeriaApplication extends Application {
             createHomePage();
             this.window.setScene(home);
         });
+        bUser.setOnAction(e -> {
+            createUserPager();
+            this.window.setScene(user);
+        });
 
         homePageVMenuLayout.getChildren().add(bPizza);
         homePageVMenuLayout.getChildren().add(hFiller1);
@@ -284,6 +294,7 @@ public class PizzeriaApplication extends Application {
         homePageHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
 
         homePageHMenuLayout.getChildren().add(vFiller);
+        homePageHMenuLayout.getChildren().add(bUser);
         homePageHMenuLayout.getChildren().add(bHome);
 
         homePagePizzasLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -312,11 +323,13 @@ public class PizzeriaApplication extends Application {
         ImageView homeImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
+        ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
             FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
             FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
+            FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
             exitImg.setFitHeight(50);
             exitImg.setFitWidth(50);
@@ -329,6 +342,9 @@ public class PizzeriaApplication extends Application {
             pizzaImg = new ImageView(new Image(input4));
             pizzaImg.setFitHeight(50);
             pizzaImg.setFitWidth(50);
+            userImg = new ImageView(new Image(input5));
+            userImg.setFitHeight(50);
+            userImg.setFitWidth(50);
         } catch (FileNotFoundException e) {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(e);
@@ -345,6 +361,7 @@ public class PizzeriaApplication extends Application {
         Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
+        Button bUser = new Button("", userImg);
         Button bPay = new Button("Pay");
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
@@ -359,6 +376,13 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(home);
         });
 
+        bUser.setOnAction(e -> {
+            createUserPager();
+            this.window.setScene(user);
+        });
+
+        bPay.setPrefSize(100,100);
+
         checkOutVMenuLayout.getChildren().add(bPizza);
         checkOutVMenuLayout.getChildren().add(hFiller1);
         checkOutVMenuLayout.getChildren().add(bCart);
@@ -369,6 +393,7 @@ public class PizzeriaApplication extends Application {
         checkOutHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
 
         checkOutHMenuLayout.getChildren().add(vFiller);
+        checkOutHMenuLayout.getChildren().add(bUser);
         checkOutHMenuLayout.getChildren().add(bHome);
 
         checkOutOrdersLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -423,6 +448,204 @@ public class PizzeriaApplication extends Application {
         checkOutLayout.setBottom(new BorderPane());
 
         this.checkOut = new Scene(checkOutLayout, 800, 512);
+    }
+
+    private void createUserPager() {
+        BorderPane userPageLayout = new BorderPane();
+        BorderPane userPageMenuLayout = new BorderPane();
+        ScrollPane userPageOrdersLayout = new ScrollPane();
+        GridPane userPageModifyLayout = new GridPane();
+        HBox userPageHMenuLayout = new HBox();
+        VBox userPageVMenuLayout = new VBox();
+
+        ImageView exitImg = null;
+        ImageView homeImg = null;
+        ImageView cartImg = null;
+        ImageView pizzaImg = null;
+        ImageView userImg = null;
+        try {
+            FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
+            FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
+            FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
+            FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
+            exitImg = new ImageView(new Image(input1));
+            exitImg.setFitHeight(50);
+            exitImg.setFitWidth(50);
+            homeImg = new ImageView(new Image(input2));
+            homeImg.setFitHeight(50);
+            homeImg.setFitWidth(50);
+            cartImg = new ImageView(new Image(input3));
+            cartImg.setFitHeight(50);
+            cartImg.setFitWidth(50);
+            pizzaImg = new ImageView(new Image(input4));
+            pizzaImg.setFitHeight(50);
+            pizzaImg.setFitWidth(50);
+            userImg = new ImageView(new Image(input5));
+            userImg.setFitHeight(50);
+            userImg.setFitWidth(50);
+        } catch (FileNotFoundException e) {
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(e);
+        }
+
+        Region vFiller = new Region();
+        vFiller.setPrefSize(10000,1);
+        Region hFiller1 = new Region();
+        hFiller1.setPrefSize(1,200);
+        Region hFiller2 = new Region();
+        hFiller2.setPrefSize(1,200);
+
+        Button bExit = new Button("", exitImg);
+        Button bHome = new Button("", homeImg);
+        Button bCart = new Button("", cartImg);
+        Button bPizza = new Button("", pizzaImg);
+        Button bUser = new Button("", userImg);
+        Button bUpdate = new Button("Update");
+        bUpdate.setLayoutX(0);
+        bUpdate.setLayoutY(0);
+        bExit.setOnAction(e -> {
+            this.cart.removeEverything();
+            this.window.setScene(login);
+        });
+        bHome.setOnAction(e -> this.window.setScene(home));
+        bCart.setOnAction(e -> this.window.setScene(checkOut));
+        bPizza.setOnAction(e -> this.window.setScene(home));
+
+        bUser.setOnAction(e -> {
+            createUserPager();
+            this.window.setScene(user);
+        });
+
+        /* TextFields */
+        TextField tFieldUserName = new TextField();
+        PasswordField tFieldPassword = new PasswordField();
+        PasswordField tFieldPasswordAgain = new PasswordField();
+        TextField tFieldPhoneNumber = new TextField();
+        TextField tFieldAddress = new TextField();
+
+        bUpdate.setOnAction(e -> {
+            this.errorMessage = "";
+            if (!tFieldUserName.getText().equals("")){
+                    database.readData("CLIENTS"
+                            , "USERNAME=\"" + uname + "\""
+                            , null
+                            , null
+                            , null
+                            , null);
+                    ResultSet rs = database.getRs();
+                    try {
+                        if (rs.isBeforeFirst()) {
+                            this.errorMessage += "Username already in use";
+                        }
+                    } catch (SQLException ex) {
+                        System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                        ex.printStackTrace();
+                }
+                if (errorMessage.equals("")){
+                    database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                }
+            }
+            if (!tFieldPassword.getText().equals("")){
+                if (!Objects.equals(tFieldPassword.getText(), tFieldPasswordAgain.getText())){
+                    this.errorMessage += "The passwords doesn't match\n";
+                }
+
+                String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–{}:;',?/*~$^+=<>]).{8,20}$";
+
+                Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
+
+                if (!pattern.matcher(tFieldPassword.getText()).matches()){
+                    this.errorMessage += "Wrong password\n";
+                }
+                if (errorMessage.equals("")){
+                    database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                }
+            }
+            if (!tFieldPhoneNumber.getText().equals("")){
+                database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"");
+            }
+            if (!tFieldAddress.getText().equals("")){
+                database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"");
+            }
+            if (this.errorMessage.equals("")){
+                this.window.setScene(login);
+                return;
+            }
+            createUserPager();
+            this.window.setScene(this.user);
+        });
+
+        userPageModifyLayout.add(new Text("Username:"),0,0);
+        userPageModifyLayout.add(tFieldUserName,1,0);
+        userPageModifyLayout.add(new Text("Password:"),0,1);
+        userPageModifyLayout.add(tFieldPassword,1,1);
+        userPageModifyLayout.add(new Text("Password again:"),0,2);
+        userPageModifyLayout.add(tFieldPasswordAgain,1,2);
+        userPageModifyLayout.add(new Text("Phone number:"),0,3);
+        userPageModifyLayout.add(tFieldPhoneNumber,1,3);
+        userPageModifyLayout.add(new Text("Address:"),0,4);
+        userPageModifyLayout.add(tFieldAddress,1,4);
+        userPageModifyLayout.add(bUpdate,1,5);
+        userPageModifyLayout.add(new Text(this.errorMessage),2,5);
+
+
+        userPageModifyLayout.setHgap(10);
+        userPageModifyLayout.setVgap(10);
+        userPageModifyLayout.setPadding(new Insets(10, 10, 10, 10));
+
+        userPageVMenuLayout.getChildren().add(bPizza);
+        userPageVMenuLayout.getChildren().add(hFiller1);
+        userPageVMenuLayout.getChildren().add(bCart);
+        userPageVMenuLayout.getChildren().add(hFiller2);
+        userPageVMenuLayout.getChildren().add(bExit);
+
+        userPageVMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(187, 153, 255), CornerRadii.EMPTY, Insets.EMPTY))));
+        userPageHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
+
+        userPageHMenuLayout.getChildren().add(vFiller);
+        userPageHMenuLayout.getChildren().add(bUser);
+        userPageHMenuLayout.getChildren().add(bHome);
+
+        userPageOrdersLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        userPageOrdersLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        GridPane g = new GridPane();
+        try {
+            this.database.readData("orders","USERNAME = \"" + this.uname + "\"", true, "TIME", null, null);
+            ResultSet rs = this.database.getRs();
+            g.add(new Text("Username"), 0, 0);
+            g.add(new Text("Time"), 1, 0);
+            g.add(new Text("Price"), 2, 0);
+            g.add(new Text("Items"), 3, 0);
+            for (int i = 1; rs.next(); i++) {
+                g.add(new Text(rs.getString(1)), 0, i);
+                g.add(new Text(rs.getString(2)), 1, i);
+                g.add(new Text(rs.getString(3)), 2, i);
+                g.add(new Text(rs.getString(4)), 3, i);
+            }
+        } catch (SQLException e){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            e.printStackTrace();
+        }
+
+        g.setHgap(10);
+        g.setVgap(10);
+        g.setPadding(new Insets(10, 10, 10, 10));
+        g.setPrefWidth(400);
+        userPageOrdersLayout.setContent(g);
+        userPageOrdersLayout.setPrefWidth(400);
+        userPageOrdersLayout.setMaxSize(400,500);
+
+        userPageMenuLayout.setCenter(userPageModifyLayout);
+        userPageMenuLayout.setRight(userPageOrdersLayout);
+
+        userPageLayout.setTop(userPageHMenuLayout);
+        userPageLayout.setLeft(userPageVMenuLayout);
+        userPageLayout.setCenter(userPageMenuLayout);
+        userPageLayout.setBottom(new BorderPane());
+
+        this.user = new Scene(userPageLayout, 800, 512);
     }
 
     @Override

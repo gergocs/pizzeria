@@ -1,6 +1,8 @@
 package com.pizzeria.database;
 
 import java.sql.*;
+import java.util.Objects;
+
 import org.apache.commons.codec.digest.*;
 
 public class Database {
@@ -79,6 +81,25 @@ public class Database {
         } catch (SQLException e){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(e);
+        }
+    }
+
+    public void updateData(String table, String column, String value, String condition) {
+        String query = "update LOW_PRIORITY " + table + " set " + column + " = ? where " + condition;
+        System.out.println(query);
+        try {
+            PreparedStatement preparedStmt = this.con.prepareStatement(query);
+            if (Objects.equals(column, "PRICE")){
+                preparedStmt.setInt(1, Integer.parseInt(value));
+            } else {
+                preparedStmt.setString(1, Objects.equals(column, "PWD") ? DigestUtils.shaHex(value): value);
+            }
+
+
+            preparedStmt.executeUpdate();
+        } catch (SQLException throwables) {
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(throwables);
         }
     }
 
