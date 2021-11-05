@@ -26,32 +26,19 @@ import com.pizzeria.cart.Cart;
 
 public class PizzeriaApplication extends Application {
 
-    Stage window;
-    Scene login, register, home, checkOut;
+    private Stage window;
+    private Scene login, register, home, checkOut;
 
-    GridPane registerLayout = new GridPane();
-    GridPane loginLayout = new GridPane();
-    BorderPane homePageLayout = new BorderPane();
-    HBox homePageHMenuLayout = new HBox();
-    VBox homePageVMenuLayout = new VBox();
-    ScrollPane homePagePizzasLayout = new ScrollPane();
+    private String errorMessage = "";
+    private String uname;
 
-    Text username = new Text("Username");
-    Text password = new Text("Password");
-    Text passwordAgain = new Text("Password Again");
-    Text phoneNumber = new Text("Phone number");
-    Text address = new Text("Address");
-
-    Text loginUserName = new Text("Username");
-    Text loginPassword = new Text("Password");
-
-    String errorMessage = "";
-    String uname;
-
-    Database database = new Database();
-    Cart cart = new Cart();
+    private final Database database = new Database();
+    private final Cart cart = new Cart();
 
     private void setScenes(){
+        GridPane registerLayout = new GridPane();
+        GridPane loginLayout = new GridPane();
+
         /* TextFields */
         TextField tFieldUserName = new TextField();
         PasswordField tFieldPassword = new PasswordField();
@@ -111,6 +98,7 @@ public class PizzeriaApplication extends Application {
             tFieldLoginPassword.clear();
 
             System.out.println("good");
+            createHomePage();
             window.setScene(home);
         });
         Button bRegister = new Button("Register");
@@ -199,15 +187,15 @@ public class PizzeriaApplication extends Application {
         registerLayout.setVgap(5);
         registerLayout.setHgap(5);
         registerLayout.setAlignment(Pos.CENTER);
-        registerLayout.add(this.username, 0, 0);
+        registerLayout.add(new Text("Username"), 0, 0);
         registerLayout.add(tFieldUserName, 1, 0);
-        registerLayout.add(this.password,0, 1);
+        registerLayout.add(new Text("Password"),0, 1);
         registerLayout.add(tFieldPassword, 1, 1);
-        registerLayout.add(passwordAgain, 0, 2);
+        registerLayout.add(new Text("Password Again"), 0, 2);
         registerLayout.add(tFieldPasswordAgain, 1, 2);
-        registerLayout.add(phoneNumber,0, 3);
+        registerLayout.add(new Text("Phone number"),0, 3);
         registerLayout.add(tFieldPhoneNumber, 1, 3);
-        registerLayout.add(address, 0, 4);
+        registerLayout.add(new Text("Address"), 0, 4);
         registerLayout.add(tFieldAddress, 1, 4);
         registerLayout.add(bRegister, 0, 5);
         registerLayout.add(bChangeToLogin, 1, 5);
@@ -217,18 +205,21 @@ public class PizzeriaApplication extends Application {
         loginLayout.setVgap(5);
         loginLayout.setHgap(5);
         loginLayout.setAlignment(Pos.CENTER);
-        loginLayout.add(loginUserName, 0, 0);
+        loginLayout.add(new Text("Username"), 0, 0);
         loginLayout.add(tFieldLoginUserName, 1, 0);
-        loginLayout.add(loginPassword, 0, 1);
+        loginLayout.add(new Text("Password"), 0, 1);
         loginLayout.add(tFieldLoginPassword, 1, 1);
         loginLayout.add(bLogin, 0, 2);
         loginLayout.add(bChangeToRegister, 1, 2);
         this.login = new Scene(loginLayout, 800, 512);
         this.register = new Scene(registerLayout, 800, 512);
-        createHomePage();
     }
 
     private void createHomePage() {
+        BorderPane homePageLayout = new BorderPane();
+        HBox homePageHMenuLayout = new HBox();
+        VBox homePageVMenuLayout = new VBox();
+        ScrollPane homePagePizzasLayout = new ScrollPane();
         ImageView exitImg = null;
         ImageView homeImg = null;
         ImageView cartImg = null;
@@ -266,13 +257,22 @@ public class PizzeriaApplication extends Application {
         Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
-        bExit.setOnAction(e -> this.window.setScene(login));
-        bHome.setOnAction(e -> this.window.setScene(home));
+        bExit.setOnAction(e -> {
+            this.cart.removeEverything();
+            this.window.setScene(login);
+        });
+        bHome.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
         bCart.setOnAction(e -> {
             createCheckOutPage();
             this.window.setScene(checkOut);
         });
-        bPizza.setOnAction(e -> this.window.setScene(home));
+        bPizza.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
 
         homePageVMenuLayout.getChildren().add(bPizza);
         homePageVMenuLayout.getChildren().add(hFiller1);
@@ -346,7 +346,10 @@ public class PizzeriaApplication extends Application {
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
         Button bPay = new Button("Pay");
-        bExit.setOnAction(e -> this.window.setScene(login));
+        bExit.setOnAction(e -> {
+            this.cart.removeEverything();
+            this.window.setScene(login);
+        });
         bHome.setOnAction(e -> this.window.setScene(home));
         bCart.setOnAction(e -> this.window.setScene(checkOut));
         bPizza.setOnAction(e -> this.window.setScene(home));
@@ -510,7 +513,7 @@ public class PizzeriaApplication extends Application {
 
     @Override
     public void stop(){
-        System.out.println(this.cart.toString());
+        System.out.println(this.cart);
         this.database.close();
     }
 
