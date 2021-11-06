@@ -3,6 +3,7 @@ package com.pizzeria;
 import com.pizzeria.cart.Cart;
 import com.pizzeria.database.Database;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -31,7 +32,7 @@ public class PizzeriaApplication extends Application {
     private String errorMessage = "";
     private String uname;
 
-    private final Database database = new Database();
+    private Database database;
     private final Cart cart = new Cart();
 
     private final ArrayList<Integer> allowedItems = new ArrayList<>();
@@ -72,19 +73,19 @@ public class PizzeriaApplication extends Application {
             }
 
             if (errorMessage.equals("")){
-                database.readData("CLIENTS",
-                        "USERNAME=\"" + uname + "\" AND PWD=\"" + DigestUtils.shaHex(password) + "\""
-                        ,null, null
-                        ,null,
-                        null);
-                ResultSet rs = database.getRs();
                 try {
+                    database.readData("CLIENTS",
+                            "USERNAME=\"" + uname + "\" AND PWD=\"" + DigestUtils.shaHex(password) + "\""
+                            , null, null
+                            , null,
+                            null);
+                    ResultSet rs = database.getRs();
                     if (!rs.isBeforeFirst()){
                         errorMessage += "Invalid username or Password";
                     }
-                } catch (SQLException ex) {
+                } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-                    ex.printStackTrace();
+                    System.out.println(exception);
                 }
             }
 
@@ -137,20 +138,20 @@ public class PizzeriaApplication extends Application {
             }
 
             if (errorMessage.equals("")){
-                database.readData("CLIENTS"
-                        ,"USERNAME=\"" + uname + "\""
-                        ,null
-                        ,null
-                        ,null
-                        ,null);
-                ResultSet rs = database.getRs();
                 try {
+                    database.readData("CLIENTS"
+                            ,"USERNAME=\"" + uname + "\""
+                            ,null
+                            ,null
+                            ,null
+                            ,null);
+                    ResultSet rs = database.getRs();
                     if (rs.isBeforeFirst()){
                         errorMessage += "Username already in use";
                     }
-                } catch (SQLException ex) {
+                } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-                    ex.printStackTrace();
+                    System.out.println(exception);
                 }
             }
 
@@ -163,8 +164,13 @@ public class PizzeriaApplication extends Application {
                 this.window.setScene(register);
                 return;
             }
+            try{
+                database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address);
+            } catch (SQLException exception){
+                System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                System.out.println(exception);
+            }
 
-            database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address);
 
             tFieldUserName.clear();
             tFieldPassword.clear();
@@ -244,9 +250,9 @@ public class PizzeriaApplication extends Application {
             userImg = new ImageView(new Image(input5));
             userImg.setFitHeight(50);
             userImg.setFitWidth(50);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception) {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            System.out.println(e);
+            System.out.println(exception);
         }
 
         Region vFiller = new Region();
@@ -290,6 +296,8 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(home);
         });
         bTop.setOnAction(e -> {
+            this.allowedItems.clear();
+            this.notAllowedItems.clear();
             topFive = true;
             createHomePage();
             this.window.setScene(home);
@@ -345,8 +353,9 @@ public class PizzeriaApplication extends Application {
                 });
                 homePageFilterLayout.getChildren().add(cb);
             }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+        } catch (SQLException exception){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(exception);
         }
 
         BorderPane homePageMainLayout = new BorderPane();
@@ -389,9 +398,9 @@ public class PizzeriaApplication extends Application {
             userImg = new ImageView(new Image(input5));
             userImg.setFitHeight(50);
             userImg.setFitWidth(50);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception) {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            System.out.println(e);
+            System.out.println(exception);
         }
 
         Region vFiller = new Region();
@@ -419,7 +428,13 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(home);
         });
         bPay.setOnAction(e -> {
-            this.database.writeData("orders", this.uname + ";" + this.cart.getPrice() + ";" + this.cart.getItemAsString());
+            try{
+                this.database.writeData("orders", this.uname + ";" + this.cart.getPrice() + ";" + this.cart.getItemAsString());
+            } catch (SQLException exception){
+                System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                System.out.println(exception);
+            }
+
             this.cart.removeEverything();
             this.window.setScene(home);
         });
@@ -455,9 +470,9 @@ public class PizzeriaApplication extends Application {
             FileInputStream fileInputStream = null;
             try {
                 fileInputStream = new FileInputStream("src/resources/images/remove.png");
-            } catch (FileNotFoundException e) {
+            } catch (FileNotFoundException exception){
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-                e.printStackTrace();
+                System.out.println(exception);
             }
             assert fileInputStream != null;
             ImageView removeFromCartImg = new ImageView(new Image(fileInputStream));
@@ -526,9 +541,9 @@ public class PizzeriaApplication extends Application {
             userImg = new ImageView(new Image(input5));
             userImg.setFitHeight(50);
             userImg.setFitWidth(50);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            System.out.println(e);
+            System.out.println(exception);
         }
 
         Region vFiller = new Region();
@@ -574,23 +589,28 @@ public class PizzeriaApplication extends Application {
         bUpdate.setOnAction(e -> {
             this.errorMessage = "";
             if (!tFieldUserName.getText().equals("")){
-                    database.readData("CLIENTS"
-                            , "USERNAME=\"" + uname + "\""
-                            , null
-                            , null
-                            , null
-                            , null);
-                    ResultSet rs = database.getRs();
                     try {
+                        database.readData("CLIENTS"
+                                , "USERNAME=\"" + uname + "\""
+                                , null
+                                , null
+                                , null
+                                , null);
+                        ResultSet rs = database.getRs();
                         if (rs.isBeforeFirst()) {
                             this.errorMessage += "Username already in use";
                         }
-                    } catch (SQLException ex) {
+                    } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-                        ex.printStackTrace();
-                }
+                        System.out.println(exception);
+                    }
                 if (errorMessage.equals("")){
-                    database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                    try{
+                        database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                    } catch (SQLException exception){
+                        System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                        System.out.println(exception);
+                    }
                 }
             }
             if (!tFieldPassword.getText().equals("")){
@@ -606,14 +626,29 @@ public class PizzeriaApplication extends Application {
                     this.errorMessage += "Wrong password\n";
                 }
                 if (errorMessage.equals("")){
-                    database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                    try{
+                        database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                    } catch (SQLException exception){
+                        System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                        System.out.println(exception);
+                    }
                 }
             }
             if (!tFieldPhoneNumber.getText().equals("")){
-                database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"");
+                try{
+                    database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"");
+                } catch (SQLException exception){
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
+                }
             }
             if (!tFieldAddress.getText().equals("")){
-                database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"");
+                try{
+                    database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"");
+                } catch (SQLException exception){
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
+                }
             }
             if (this.errorMessage.equals("")){
                 this.window.setScene(login);
@@ -630,12 +665,17 @@ public class PizzeriaApplication extends Application {
                 while (rs.next()) {
                     this.database.updateData("orders","USERNAME", this.uname + "[DELETED]", "USERNAME = \"" +  rs.getString(1) + "\" and TIME = \"" + rs.getString(2) + "\"");
                 }
-            } catch (SQLException error){
+            } catch (SQLException exception){
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-                error.printStackTrace();
+                System.out.println(exception);
+            }
+            try{
+                this.database.deleteData("clients", "USERNAME = \"" + this.uname + "\"");
+            } catch (SQLException exception){
+                System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                System.out.println(exception);
             }
 
-            this.database.deleteData("clients", "USERNAME = \"" + this.uname + "\"");
 
             this.window.setScene(this.login);
         });
@@ -688,9 +728,9 @@ public class PizzeriaApplication extends Application {
                 g.add(new Text(rs.getString(3)), 2, i);
                 g.add(new Text(rs.getString(4)), 3, i);
             }
-        } catch (SQLException e){
+        } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            e.printStackTrace();
+            System.out.println(exception);
         }
 
         g.setHgap(10);
@@ -715,6 +755,13 @@ public class PizzeriaApplication extends Application {
     @Override
     public void start(Stage primaryStage) {
         window = primaryStage;
+        try{
+            this.database = new Database();
+        } catch (SQLException exception){
+            System.out.println(exception);
+            Platform.exit();
+        }
+
         setScenes();
         window.setScene(login);
         window.setTitle("Pizzeria");
@@ -725,9 +772,9 @@ public class PizzeriaApplication extends Application {
             while(rs.next()){
                 System.out.println(rs.getString(1)+"  "+rs.getString(2)+"  "+rs.getString(3)+"  "+rs.getString(4));
             }
-        }catch (Exception e){
+        } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            System.out.println(e);
+            System.out.println(exception);
         }
     }
 
@@ -738,7 +785,13 @@ public class PizzeriaApplication extends Application {
         gridItems.setPadding(new Insets(10, 10, 10, 10));
         if (this.allowedItems.isEmpty() && this.notAllowedItems.isEmpty()) {
             if (!this.topFive){
-                database.readData("PIZZAS", null, true, "NAME", null , null);
+                try{
+                    database.readData("PIZZAS", null, true, "NAME", null , null);
+                } catch (SQLException exception){
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
+                }
+
             }else{
                 try{
                     database.readData("ORDERS", null, null, null, null , null);
@@ -769,8 +822,9 @@ public class PizzeriaApplication extends Application {
                     bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
                     bobTheBuilder.append(");");
                     database.readDataCustom(bobTheBuilder.toString());
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
+                } catch (SQLException exception){
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
                 } finally {
                     this.topFive = !this.topFive;
                 }
@@ -790,7 +844,13 @@ public class PizzeriaApplication extends Application {
                 bobTheBuilder.append(" and TOPPINGS NOT REGEXP ").append("'([^0-9]|^)").append(notAllowedItem).append("([^0-9]|$)'");
             }
             bobTheBuilder.append(";");
-            this.database.readDataCustom(bobTheBuilder.toString());
+            try{
+                this.database.readDataCustom(bobTheBuilder.toString());
+            } catch (SQLException exception){
+                System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                System.out.println(exception);
+            }
+
             this.notAllowedItems.clear();
             this.allowedItems.clear();
         }
@@ -804,9 +864,9 @@ public class PizzeriaApplication extends Application {
                 FileInputStream fileInputStream = null;
                 try {
                     fileInputStream = new FileInputStream("src/resources/images/add.png");
-                } catch (FileNotFoundException e) {
+                } catch (FileNotFoundException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-                    e.printStackTrace();
+                    System.out.println(exception);
                 }
                 assert fileInputStream != null;
                 BorderPane item = new BorderPane();
@@ -848,9 +908,9 @@ public class PizzeriaApplication extends Application {
                     lineCounter++;
                 }
             }
-        }catch (SQLException e){
+        } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            System.out.println(e);
+            System.out.println(exception);
         }
 
         return gridItems;
@@ -874,7 +934,13 @@ public class PizzeriaApplication extends Application {
 
     @Override
     public void stop(){
-        this.database.close();
+        try{
+            this.database.close();
+        } catch (SQLException exception){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(exception);
+        }
+
     }
 
     public static void main(String[] args) {
