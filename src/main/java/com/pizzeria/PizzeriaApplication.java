@@ -20,8 +20,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class PizzeriaApplication extends Application {
@@ -37,6 +36,8 @@ public class PizzeriaApplication extends Application {
 
     private final ArrayList<Integer> allowedItems = new ArrayList<>();
     private final ArrayList<Integer> notAllowedItems = new ArrayList<>();
+
+    private boolean topFive = false;
 
     private void setScenes(){
         GridPane registerLayout = new GridPane();
@@ -223,22 +224,17 @@ public class PizzeriaApplication extends Application {
         VBox homePageVMenuLayout = new VBox();
         ScrollPane homePagePizzasLayout = new ScrollPane();
         ImageView exitImg = null;
-        ImageView homeImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
         ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
-            FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
             FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
             FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
             exitImg.setFitHeight(50);
             exitImg.setFitWidth(50);
-            homeImg = new ImageView(new Image(input2));
-            homeImg.setFitHeight(50);
-            homeImg.setFitWidth(50);
             cartImg = new ImageView(new Image(input3));
             cartImg.setFitHeight(50);
             cartImg.setFitWidth(50);
@@ -261,19 +257,15 @@ public class PizzeriaApplication extends Application {
         hFiller2.setPrefSize(1,200);
 
         Button bExit = new Button("", exitImg);
-        Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
         Button bUser = new Button("", userImg);
         Button bFilter = new Button("Filter");
         Button bClear = new Button("Clear filter");
+        Button bTop = new Button("Top 5");
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
-        });
-        bHome.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
         });
         bCart.setOnAction(e -> {
             createCheckOutPage();
@@ -297,6 +289,11 @@ public class PizzeriaApplication extends Application {
             createHomePage();
             this.window.setScene(home);
         });
+        bTop.setOnAction(e -> {
+            topFive = true;
+            createHomePage();
+            this.window.setScene(home);
+        });
 
         homePageVMenuLayout.getChildren().add(bPizza);
         homePageVMenuLayout.getChildren().add(hFiller1);
@@ -309,7 +306,6 @@ public class PizzeriaApplication extends Application {
 
         homePageHMenuLayout.getChildren().add(vFiller);
         homePageHMenuLayout.getChildren().add(bUser);
-        homePageHMenuLayout.getChildren().add(bHome);
 
         homePagePizzasLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         homePagePizzasLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -318,9 +314,9 @@ public class PizzeriaApplication extends Application {
         homePagePizzasLayout.setContent(g);
         homePagePizzasLayout.setMaxSize(500,500);
 
-
         VBox homePageFilterLayout = new VBox();
 
+        homePageFilterLayout.getChildren().add(bTop);
         homePageFilterLayout.getChildren().add(bFilter);
         homePageFilterLayout.getChildren().add(bClear);
         try {
@@ -373,22 +369,17 @@ public class PizzeriaApplication extends Application {
         VBox checkOutVMenuLayout = new VBox();
 
         ImageView exitImg = null;
-        ImageView homeImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
         ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
-            FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
             FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
             FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
             exitImg.setFitHeight(50);
             exitImg.setFitWidth(50);
-            homeImg = new ImageView(new Image(input2));
-            homeImg.setFitHeight(50);
-            homeImg.setFitWidth(50);
             cartImg = new ImageView(new Image(input3));
             cartImg.setFitHeight(50);
             cartImg.setFitWidth(50);
@@ -411,7 +402,6 @@ public class PizzeriaApplication extends Application {
         hFiller2.setPrefSize(1,200);
 
         Button bExit = new Button("", exitImg);
-        Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
         Button bUser = new Button("", userImg);
@@ -420,9 +410,14 @@ public class PizzeriaApplication extends Application {
             this.cart.removeEverything();
             this.window.setScene(login);
         });
-        bHome.setOnAction(e -> this.window.setScene(home));
-        bCart.setOnAction(e -> this.window.setScene(checkOut));
-        bPizza.setOnAction(e -> this.window.setScene(home));
+        bCart.setOnAction(e -> {
+            createCheckOutPage();
+            this.window.setScene(checkOut);
+        });
+        bPizza.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
         bPay.setOnAction(e -> {
             this.database.writeData("orders", this.uname + ";" + this.cart.getPrice() + ";" + this.cart.getItemAsString());
             this.cart.removeEverything();
@@ -447,7 +442,6 @@ public class PizzeriaApplication extends Application {
 
         checkOutHMenuLayout.getChildren().add(vFiller);
         checkOutHMenuLayout.getChildren().add(bUser);
-        checkOutHMenuLayout.getChildren().add(bHome);
 
         checkOutOrdersLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         checkOutOrdersLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -512,22 +506,17 @@ public class PizzeriaApplication extends Application {
         VBox userPageVMenuLayout = new VBox();
 
         ImageView exitImg = null;
-        ImageView homeImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
         ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
-            FileInputStream input2 = new FileInputStream("src/resources/images/home.png");
             FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
             FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
             exitImg.setFitHeight(50);
             exitImg.setFitWidth(50);
-            homeImg = new ImageView(new Image(input2));
-            homeImg.setFitHeight(50);
-            homeImg.setFitWidth(50);
             cartImg = new ImageView(new Image(input3));
             cartImg.setFitHeight(50);
             cartImg.setFitWidth(50);
@@ -557,7 +546,6 @@ public class PizzeriaApplication extends Application {
         TextField tFieldAddress = new TextField();
 
         Button bExit = new Button("", exitImg);
-        Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
         Button bUser = new Button("", userImg);
@@ -569,9 +557,14 @@ public class PizzeriaApplication extends Application {
             this.cart.removeEverything();
             this.window.setScene(login);
         });
-        bHome.setOnAction(e -> this.window.setScene(home));
-        bCart.setOnAction(e -> this.window.setScene(checkOut));
-        bPizza.setOnAction(e -> this.window.setScene(home));
+        bCart.setOnAction(e -> {
+            createCheckOutPage();
+            this.window.setScene(checkOut);
+        });
+        bPizza.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
 
         bUser.setOnAction(e -> {
             createUserPager();
@@ -677,7 +670,6 @@ public class PizzeriaApplication extends Application {
 
         userPageHMenuLayout.getChildren().add(vFiller);
         userPageHMenuLayout.getChildren().add(bUser);
-        userPageHMenuLayout.getChildren().add(bHome);
 
         userPageOrdersLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         userPageOrdersLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -745,7 +737,45 @@ public class PizzeriaApplication extends Application {
         gridItems.setVgap(100);
         gridItems.setPadding(new Insets(10, 10, 10, 10));
         if (this.allowedItems.isEmpty() && this.notAllowedItems.isEmpty()) {
-            database.readData("PIZZAS", null, true, "NAME", null, null);
+            if (!this.topFive){
+                database.readData("PIZZAS", null, true, "NAME", null , null);
+            }else{
+                try{
+                    database.readData("ORDERS", null, null, null, null , null);
+                    ResultSet rs = database.getRs();
+                    HashMap<String, Integer> unOrderedOrders = new HashMap<>();
+                    while (rs.next()) {
+                        String[] pizzas = rs.getString(4).split(",");
+                        for (String pizza : pizzas) {
+                            if (unOrderedOrders.containsKey(pizza)) {
+                                unOrderedOrders.put(pizza, unOrderedOrders.get(pizza) + 1);
+                            } else {
+                                unOrderedOrders.put(pizza, 1);
+                            }
+                        }
+                    }
+                    Map<String, Integer> sortedMapDsc = sortByComparator(unOrderedOrders);
+                    StringBuilder bobTheBuilder = new StringBuilder();
+                    bobTheBuilder.append("select * from pizzas where NAME in (");
+                    int counter = 0;
+                    for (Map.Entry<String, Integer> entry : sortedMapDsc.entrySet()){
+                        if (counter < 5){
+                            bobTheBuilder.append("\"").append(entry.getKey()).append("\",");
+                            counter++;
+                            continue;
+                        }
+                        break;
+                    }
+                    bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
+                    bobTheBuilder.append(");");
+                    database.readDataCustom(bobTheBuilder.toString());
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                } finally {
+                    this.topFive = !this.topFive;
+                }
+            }
+
         } else {
             StringBuilder bobTheBuilder = new StringBuilder();
             bobTheBuilder.append("select * from PIZZAS where TOPPINGS REGEXP ");
@@ -824,6 +854,22 @@ public class PizzeriaApplication extends Application {
         }
 
         return gridItems;
+    }
+
+    private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap)
+    {
+
+        List<Map.Entry<String, Integer>> list = new LinkedList<>(unsortMap.entrySet());
+
+        list.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
+
+        Map<String, Integer> sortedMap = new LinkedHashMap<>();
+        for (Map.Entry<String, Integer> entry : list)
+        {
+            sortedMap.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedMap;
     }
 
     @Override
