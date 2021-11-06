@@ -1,5 +1,7 @@
 package com.pizzeria;
 
+import com.pizzeria.cart.Cart;
+import com.pizzeria.database.Database;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -7,22 +9,20 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.regex.Pattern;
-
-import org.apache.commons.codec.digest.*;
-
-import com.pizzeria.database.*;
-import com.pizzeria.cart.Cart;
 
 public class PizzeriaApplication extends Application {
 
@@ -34,6 +34,9 @@ public class PizzeriaApplication extends Application {
 
     private final Database database = new Database();
     private final Cart cart = new Cart();
+
+    private final ArrayList<Integer> allowedItems = new ArrayList<>();
+    private final ArrayList<Integer> notAllowedItems = new ArrayList<>();
 
     private void setScenes(){
         GridPane registerLayout = new GridPane();
@@ -97,7 +100,6 @@ public class PizzeriaApplication extends Application {
             tFieldLoginUserName.clear();
             tFieldLoginPassword.clear();
 
-            System.out.println("good");
             createHomePage();
             window.setScene(home);
         });
@@ -263,6 +265,8 @@ public class PizzeriaApplication extends Application {
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
         Button bUser = new Button("", userImg);
+        Button bFilter = new Button("Filter");
+        Button bClear = new Button("Clear filter");
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
@@ -282,6 +286,16 @@ public class PizzeriaApplication extends Application {
         bUser.setOnAction(e -> {
             createUserPager();
             this.window.setScene(user);
+        });
+        bFilter.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
+        bClear.setOnAction(e -> {
+            this.allowedItems.clear();
+            this.notAllowedItems.clear();
+            createHomePage();
+            this.window.setScene(home);
         });
 
         homePageVMenuLayout.getChildren().add(bPizza);
@@ -304,9 +318,48 @@ public class PizzeriaApplication extends Application {
         homePagePizzasLayout.setContent(g);
         homePagePizzasLayout.setMaxSize(500,500);
 
+
+        VBox homePageFilterLayout = new VBox();
+
+        homePageFilterLayout.getChildren().add(bFilter);
+        homePageFilterLayout.getChildren().add(bClear);
+        try {
+            this.database.readData("toppings", null, null, null, null, null);
+            ResultSet rs = this.database.getRs();
+            while (rs.next()) {
+                CheckBox cb = new CheckBox(rs.getString(2));
+                cb.allowIndeterminateProperty();
+                cb.setId(String.valueOf(rs.getInt(1)));
+                cb.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
+                    if (cb.isIndeterminate()) {
+                        cb.setSelected(true);
+                        cb.setIndeterminate(false);
+                        cb.setAllowIndeterminate(false);
+                        notAllowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
+                    } else if (cb.isSelected()) {
+                        cb.setSelected(false);
+                        allowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
+                        notAllowedItems.add(Integer.parseInt(cb.getId()));
+                    } else if (!cb.isSelected()) {
+                        cb.setSelected(true);
+                        cb.setIndeterminate(true);
+                        cb.setAllowIndeterminate(true);
+                        allowedItems.add(Integer.parseInt(cb.getId()));
+                    }
+                });
+                homePageFilterLayout.getChildren().add(cb);
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+
+        BorderPane homePageMainLayout = new BorderPane();
+        homePageMainLayout.setRight(homePageFilterLayout);
+        homePageMainLayout.setCenter(homePagePizzasLayout);
+
         homePageLayout.setTop(homePageHMenuLayout);
         homePageLayout.setLeft(homePageVMenuLayout);
-        homePageLayout.setCenter(homePagePizzasLayout);
+        homePageLayout.setCenter(homePageMainLayout);
         homePageLayout.setBottom(new BorderPane());
 
         this.home = new Scene(homePageLayout, 800, 512);
@@ -496,12 +549,20 @@ public class PizzeriaApplication extends Application {
         Region hFiller2 = new Region();
         hFiller2.setPrefSize(1,200);
 
+        /* TextFields */
+        TextField tFieldUserName = new TextField();
+        PasswordField tFieldPassword = new PasswordField();
+        PasswordField tFieldPasswordAgain = new PasswordField();
+        TextField tFieldPhoneNumber = new TextField();
+        TextField tFieldAddress = new TextField();
+
         Button bExit = new Button("", exitImg);
         Button bHome = new Button("", homeImg);
         Button bCart = new Button("", cartImg);
         Button bPizza = new Button("", pizzaImg);
         Button bUser = new Button("", userImg);
         Button bUpdate = new Button("Update");
+        Button bDelete = new Button("Delete registration");
         bUpdate.setLayoutX(0);
         bUpdate.setLayoutY(0);
         bExit.setOnAction(e -> {
@@ -516,13 +577,6 @@ public class PizzeriaApplication extends Application {
             createUserPager();
             this.window.setScene(user);
         });
-
-        /* TextFields */
-        TextField tFieldUserName = new TextField();
-        PasswordField tFieldPassword = new PasswordField();
-        PasswordField tFieldPasswordAgain = new PasswordField();
-        TextField tFieldPhoneNumber = new TextField();
-        TextField tFieldAddress = new TextField();
 
         bUpdate.setOnAction(e -> {
             this.errorMessage = "";
@@ -576,6 +630,23 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(this.user);
         });
 
+        bDelete.setOnAction(e -> {
+            try {
+                this.database.readData("orders","USERNAME = \"" + this.uname + "\"", true, "TIME", null, null);
+                ResultSet rs = this.database.getRs();
+                while (rs.next()) {
+                    this.database.updateData("orders","USERNAME", this.uname + "[DELETED]", "USERNAME = \"" +  rs.getString(1) + "\" and TIME = \"" + rs.getString(2) + "\"");
+                }
+            } catch (SQLException error){
+                System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                error.printStackTrace();
+            }
+
+            this.database.deleteData("clients", "USERNAME = \"" + this.uname + "\"");
+
+            this.window.setScene(this.login);
+        });
+
         userPageModifyLayout.add(new Text("Username:"),0,0);
         userPageModifyLayout.add(tFieldUserName,1,0);
         userPageModifyLayout.add(new Text("Password:"),0,1);
@@ -588,6 +659,7 @@ public class PizzeriaApplication extends Application {
         userPageModifyLayout.add(tFieldAddress,1,4);
         userPageModifyLayout.add(bUpdate,1,5);
         userPageModifyLayout.add(new Text(this.errorMessage),2,5);
+        userPageModifyLayout.add(bDelete,1,6);
 
 
         userPageModifyLayout.setHgap(10);
@@ -672,7 +744,27 @@ public class PizzeriaApplication extends Application {
         gridItems.setHgap(100);
         gridItems.setVgap(100);
         gridItems.setPadding(new Insets(10, 10, 10, 10));
-        database.readData("PIZZAS",null,true, "NAME", null,null);
+        if (this.allowedItems.isEmpty() && this.notAllowedItems.isEmpty()) {
+            database.readData("PIZZAS", null, true, "NAME", null, null);
+        } else {
+            StringBuilder bobTheBuilder = new StringBuilder();
+            bobTheBuilder.append("select * from PIZZAS where TOPPINGS REGEXP ");
+
+            for (int i = 0; i < this.allowedItems.size(); i++) {
+                bobTheBuilder.append("'([^0-9]|^)").append(this.allowedItems.get(i)).append("([^0-9]|$)'");
+                if (i + 1 < this.allowedItems.size()){
+                    bobTheBuilder.append(" and TOPPINGS REGEXP ");
+                }
+            }
+            for (Integer notAllowedItem : this.notAllowedItems) {
+                bobTheBuilder.append(" and TOPPINGS NOT REGEXP ").append("'([^0-9]|^)").append(notAllowedItem).append("([^0-9]|$)'");
+            }
+            bobTheBuilder.append(";");
+            this.database.readDataCustom(bobTheBuilder.toString());
+            this.notAllowedItems.clear();
+            this.allowedItems.clear();
+        }
+
         ResultSet rs = database.getRs();
 
         try{
@@ -736,7 +828,6 @@ public class PizzeriaApplication extends Application {
 
     @Override
     public void stop(){
-        System.out.println(this.cart);
         this.database.close();
     }
 

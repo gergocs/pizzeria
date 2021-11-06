@@ -38,6 +38,16 @@ public class Database {
         }
     }
 
+    public void readDataCustom(String query){
+        try{
+            Statement stmt = con.createStatement();
+            this.rs = stmt.executeQuery(query);
+        }catch (SQLException e){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(e);
+        }
+    }
+
     public void writeData(String table, String data) {
         String[] values = data.split(";");
         PreparedStatement preparedStmt = null;
@@ -86,7 +96,6 @@ public class Database {
 
     public void updateData(String table, String column, String value, String condition) {
         String query = "update LOW_PRIORITY " + table + " set " + column + " = ? where " + condition;
-        System.out.println(query);
         try {
             PreparedStatement preparedStmt = this.con.prepareStatement(query);
             if (Objects.equals(column, "PRICE")){
@@ -96,6 +105,17 @@ public class Database {
             }
 
 
+            preparedStmt.executeUpdate();
+        } catch (SQLException throwables) {
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(throwables);
+        }
+    }
+
+    public void deleteData(String table, String condition){
+        String query = "delete from " + table + " where " + condition;
+        try {
+            PreparedStatement preparedStmt = this.con.prepareStatement(query);
             preparedStmt.executeUpdate();
         } catch (SQLException throwables) {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
