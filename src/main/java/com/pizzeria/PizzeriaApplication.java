@@ -272,7 +272,7 @@ public class PizzeriaApplication extends Application {
         }
 
         Region vFiller = new Region();
-        vFiller.setPrefSize(10000,1);
+        vFiller.setPrefSize(750,1);
         Region hFiller1 = new Region();
         hFiller1.setPrefSize(1,200);
         Region hFiller2 = new Region();
@@ -429,7 +429,7 @@ public class PizzeriaApplication extends Application {
         }
 
         Region vFiller = new Region();
-        vFiller.setPrefSize(10000,1);
+        vFiller.setPrefSize(750,1);
         Region hFiller1 = new Region();
         hFiller1.setPrefSize(1,200);
         Region hFiller2 = new Region();
@@ -577,7 +577,7 @@ public class PizzeriaApplication extends Application {
         }
 
         Region vFiller = new Region();
-        vFiller.setPrefSize(10000,1);
+        vFiller.setPrefSize(750,1);
         Region hFiller1 = new Region();
         hFiller1.setPrefSize(1,200);
         Region hFiller2 = new Region();
@@ -824,7 +824,7 @@ public class PizzeriaApplication extends Application {
         }
 
         Region vFiller = new Region();
-        vFiller.setPrefSize(10000,1);
+        vFiller.setPrefSize(750,1);
         Region hFiller1 = new Region();
         hFiller1.setPrefSize(1,200);
         Region hFiller2 = new Region();
@@ -954,7 +954,7 @@ public class PizzeriaApplication extends Application {
         }
 
         Region vFiller = new Region();
-        vFiller.setPrefSize(10000,1);
+        vFiller.setPrefSize(750,1);
         Region hFiller1 = new Region();
         hFiller1.setPrefSize(1,200);
         Region hFiller2 = new Region();
@@ -998,51 +998,89 @@ public class PizzeriaApplication extends Application {
             GridPane dialogBoxLayout = new GridPane();
             TextField nameField = new TextField("");
             TextField priceField = new TextField("");
-            dialogBoxLayout.add(new Text("Pizza name:"), 0, 0);
-            dialogBoxLayout.add(nameField, 0, 1);
-            dialogBoxLayout.add(new Text("Pizza price:"), 0, 2);
-            dialogBoxLayout.add(priceField, 0, 3);
+            Button bDone = new Button("Done");
+            Button bCancel = new Button("Cancel");
 
-            Scene stageScene = new Scene(dialogBoxLayout, 150, 100);
-            dialogStage.setScene(stageScene);
-            dialogStage.setTitle("PizzaCreator420");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
             String finalString = string;
-            dialogStage.setOnCloseRequest(ee -> {
+            bDone.setOnAction(ee -> {
                 try{
-                    database.writeData("pizzas",nameField.getText() + ";" + priceField.getText() + ";" + finalString);
+                    String str = nameField.getText();
+                    String str2 = priceField.getText();
+                    if (str.isEmpty() || str2.isEmpty()){
+                        dialogStage.close();
+                        return;
+                    }
+                    database.writeData("pizzas",str + ";" + str2 + ";" + finalString);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
                 }
                 this.allowedItems.clear();
                 createPizzaCreatorPage();
+                dialogStage.close();
                 this.window.setScene(user);
             });
+
+            bCancel.setOnAction(ee -> {
+                this.allowedItems.clear();
+                createPizzaCreatorPage();
+                dialogStage.close();
+                this.window.setScene(user);
+            });
+
+            dialogBoxLayout.add(new Text("Pizza name:"), 0, 0);
+            dialogBoxLayout.add(nameField, 0, 1);
+            dialogBoxLayout.add(new Text("Pizza price:"), 0, 2);
+            dialogBoxLayout.add(priceField, 0, 3);
+            dialogBoxLayout.add(bDone, 0, 4);
+            dialogBoxLayout.add(bCancel, 0, 5);
+
+            Scene stageScene = new Scene(dialogBoxLayout, 150, 150);
+            dialogStage.setScene(stageScene);
+            dialogStage.setTitle("PizzaCreator420");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.show();
         });
         bCreateTopping.setOnAction(e -> {
             Stage dialogStage = new Stage();
             GridPane dialogBoxLayout = new GridPane();
             TextField nameField = new TextField("");
-            dialogBoxLayout.add(new Text("Topping name:"), 0, 0);
-            dialogBoxLayout.add(nameField, 0, 1);
+            Button bDone = new Button("Done");
+            Button bCancel = new Button("Cancel");
 
-            Scene stageScene = new Scene(dialogBoxLayout, 150, 100);
-            dialogStage.setScene(stageScene);
-            dialogStage.setTitle("EpicToppingCreator420");
-            dialogStage.initModality(Modality.APPLICATION_MODAL);
-            dialogStage.setOnCloseRequest(ee -> {
+            bDone.setOnAction(ee -> {
                 try{
-                    database.writeData("toppings",nameField.getText());
+                    String str = nameField.getText();
+                    if (str.isEmpty()){
+                        dialogStage.close();
+                        return;
+                    }
+                    database.writeData("toppings",str);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
                 }
                 this.allowedItems.clear();
                 createPizzaCreatorPage();
+                dialogStage.close();
                 this.window.setScene(user);
             });
+
+            bCancel.setOnAction(ee -> {
+                this.allowedItems.clear();
+                createPizzaCreatorPage();
+                dialogStage.close();
+                this.window.setScene(user);
+            });
+            dialogBoxLayout.add(new Text("Topping name:"), 0, 0);
+            dialogBoxLayout.add(nameField, 0, 1);
+            dialogBoxLayout.add(bDone, 0, 2);
+            dialogBoxLayout.add(bCancel, 0, 3);
+
+            Scene stageScene = new Scene(dialogBoxLayout, 150, 150);
+            dialogStage.setScene(stageScene);
+            dialogStage.setTitle("EpicToppingCreator420");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
             dialogStage.show();
         });
         bClear.setOnAction(e -> {
@@ -1111,22 +1149,6 @@ public class PizzeriaApplication extends Application {
 
         this.user = new Scene(pizzaCreatorPageLayout, 800, 512);
         this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
-    }
-
-    @Override
-    public void start(Stage primaryStage) {
-        window = primaryStage;
-        try{
-            this.database = new Database();
-        } catch (SQLException exception){
-            System.out.println(exception);
-            Platform.exit();
-        }
-
-        setScenes();
-        window.setScene(login);
-        window.setTitle("Pizzeria");
-        window.show();
     }
 
     private GridPane generateItems() {
@@ -1295,6 +1317,23 @@ public class PizzeriaApplication extends Application {
         }
 
         return sortedMap;
+    }
+
+    @Override
+    public void start(Stage primaryStage) {
+        window = primaryStage;
+        try{
+            this.database = new Database();
+        } catch (SQLException exception){
+            System.out.println(exception);
+            Platform.exit();
+        }
+
+        window.setResizable(false);
+        setScenes();
+        window.setScene(login);
+        window.setTitle("Pizzeria");
+        window.show();
     }
 
     @Override
