@@ -766,16 +766,6 @@ public class PizzeriaApplication extends Application {
         window.setScene(login);
         window.setTitle("Pizzeria");
         window.show();
-        try {
-            database.readData("CLIENTS","USERNAME=\"alma\"",true, "USERNAME", null,null);
-            ResultSet rs = database.getRs();
-            while(rs.next()){
-                System.out.println(rs.getString(1)+"  "+rs.getString(2)+"  "+rs.getString(3)+"  "+rs.getString(4));
-            }
-        } catch (SQLException exception){
-            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
-            System.out.println(exception);
-        }
     }
 
     private GridPane generateItems() {
@@ -936,7 +926,7 @@ public class PizzeriaApplication extends Application {
     public void stop(){
         try{
             this.database.close();
-        } catch (SQLException exception){
+        } catch (SQLException | NullPointerException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(exception);
         }
