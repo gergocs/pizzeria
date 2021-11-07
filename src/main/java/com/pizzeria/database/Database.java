@@ -59,9 +59,9 @@ public class Database {
             }
             case "pizzas" -> {
                 preparedStmt = this.con.prepareStatement(pizzasQuery);
-                preparedStmt.setString(1, values[1]);
-                preparedStmt.setInt(2, Integer.parseInt(values[2]));
-                preparedStmt.setString(3, values[3]);
+                preparedStmt.setString(1, values[0]);
+                preparedStmt.setInt(2, Integer.parseInt(values[1]));
+                preparedStmt.setString(3, values[2].replace(", ", ";"));
             }
             case "toppings" -> {
                 preparedStmt = this.con.prepareStatement(toppingsQuery);

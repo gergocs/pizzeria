@@ -4,9 +4,13 @@ import com.pizzeria.cart.Cart;
 import com.pizzeria.database.Database;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Scene;
+import javafx.scene.chart.PieChart;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -14,11 +18,14 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.apache.commons.codec.digest.DigestUtils;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -39,6 +46,9 @@ public class PizzeriaApplication extends Application {
     private final ArrayList<Integer> notAllowedItems = new ArrayList<>();
 
     private boolean topFive = false;
+    private boolean isAdmin = false;
+
+    private String previusValue = null;
 
     private void setScenes(){
         GridPane registerLayout = new GridPane();
@@ -82,6 +92,9 @@ public class PizzeriaApplication extends Application {
                     ResultSet rs = database.getRs();
                     if (!rs.isBeforeFirst()){
                         errorMessage += "Invalid username or Password";
+                    } else {
+                        rs.next();
+                        this.isAdmin = rs.getBoolean(5);
                     }
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
@@ -159,6 +172,7 @@ public class PizzeriaApplication extends Application {
                 registerLayout.add(new Text(errorMessage), 1, 6);
                 try {
                     register = new Scene(registerLayout, 800, 512);
+                    this.register.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
                 }catch (IllegalArgumentException ignored){}
 
                 this.window.setScene(register);
@@ -222,6 +236,8 @@ public class PizzeriaApplication extends Application {
         loginLayout.add(bChangeToRegister, 1, 2);
         this.login = new Scene(loginLayout, 800, 512);
         this.register = new Scene(registerLayout, 800, 512);
+        this.login.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.register.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     private void createHomePage() {
@@ -235,7 +251,7 @@ public class PizzeriaApplication extends Application {
         ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
-            FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input3 = this.isAdmin ? new FileInputStream("src/resources/images/statistics.png") : new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
             FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
@@ -274,7 +290,11 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(login);
         });
         bCart.setOnAction(e -> {
-            createCheckOutPage();
+            if (this.isAdmin) {
+                createStatisticsPage();
+            } else {
+                createCheckOutPage();
+            }
             this.window.setScene(checkOut);
         });
         bPizza.setOnAction(e -> {
@@ -282,7 +302,11 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(home);
         });
         bUser.setOnAction(e -> {
-            createUserPager();
+            if (this.isAdmin){
+                createPizzaCreatorPage();
+            }else{
+                createUserPager();
+            }
             this.window.setScene(user);
         });
         bFilter.setOnAction(e -> {
@@ -368,6 +392,7 @@ public class PizzeriaApplication extends Application {
         homePageLayout.setBottom(new BorderPane());
 
         this.home = new Scene(homePageLayout, 800, 512);
+        this.home.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     private void createCheckOutPage() {
@@ -440,7 +465,11 @@ public class PizzeriaApplication extends Application {
         });
 
         bUser.setOnAction(e -> {
-            createUserPager();
+            if (this.isAdmin){
+                createPizzaCreatorPage();
+            }else{
+                createUserPager();
+            }
             this.window.setScene(user);
         });
 
@@ -510,6 +539,7 @@ public class PizzeriaApplication extends Application {
         checkOutLayout.setBottom(new BorderPane());
 
         this.checkOut = new Scene(checkOutLayout, 800, 512);
+        this.checkOut.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     private void createUserPager() {
@@ -526,7 +556,7 @@ public class PizzeriaApplication extends Application {
         ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
-            FileInputStream input3 = new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input3 = this.isAdmin ? new FileInputStream("src/resources/images/statistics.png") : new FileInputStream("src/resources/images/cart.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
             FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
@@ -573,7 +603,11 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(login);
         });
         bCart.setOnAction(e -> {
-            createCheckOutPage();
+            if (this.isAdmin) {
+                createStatisticsPage();
+            } else {
+                createCheckOutPage();
+            }
             this.window.setScene(checkOut);
         });
         bPizza.setOnAction(e -> {
@@ -582,7 +616,11 @@ public class PizzeriaApplication extends Application {
         });
 
         bUser.setOnAction(e -> {
-            createUserPager();
+            if (this.isAdmin){
+                createPizzaCreatorPage();
+            }else{
+                createUserPager();
+            }
             this.window.setScene(user);
         });
 
@@ -750,6 +788,329 @@ public class PizzeriaApplication extends Application {
         userPageLayout.setBottom(new BorderPane());
 
         this.user = new Scene(userPageLayout, 800, 512);
+        this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+    }
+
+    private void createStatisticsPage(){
+        BorderPane checkOutLayout = new BorderPane();
+        VBox checkOutPayLayout = new VBox();
+        HBox checkOutHMenuLayout = new HBox();
+        VBox checkOutVMenuLayout = new VBox();
+
+        ImageView exitImg = null;
+        ImageView cartImg = null;
+        ImageView pizzaImg = null;
+        ImageView userImg = null;
+        try {
+            FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
+            FileInputStream input3 = this.isAdmin ? new FileInputStream("src/resources/images/statistics.png") : new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
+            FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
+            exitImg = new ImageView(new Image(input1));
+            exitImg.setFitHeight(50);
+            exitImg.setFitWidth(50);
+            cartImg = new ImageView(new Image(input3));
+            cartImg.setFitHeight(50);
+            cartImg.setFitWidth(50);
+            pizzaImg = new ImageView(new Image(input4));
+            pizzaImg.setFitHeight(50);
+            pizzaImg.setFitWidth(50);
+            userImg = new ImageView(new Image(input5));
+            userImg.setFitHeight(50);
+            userImg.setFitWidth(50);
+        } catch (FileNotFoundException exception) {
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(exception);
+        }
+
+        Region vFiller = new Region();
+        vFiller.setPrefSize(10000,1);
+        Region hFiller1 = new Region();
+        hFiller1.setPrefSize(1,200);
+        Region hFiller2 = new Region();
+        hFiller2.setPrefSize(1,200);
+
+        Button bExit = new Button("", exitImg);
+        Button bCart = new Button("", cartImg);
+        Button bPizza = new Button("", pizzaImg);
+        Button bUser = new Button("", userImg);
+        bExit.setOnAction(e -> {
+            this.cart.removeEverything();
+            this.window.setScene(login);
+        });
+        bCart.setOnAction(e -> {
+            if (this.isAdmin) {
+                createStatisticsPage();
+            } else {
+                createCheckOutPage();
+            }
+            this.window.setScene(checkOut);
+        });
+        bPizza.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
+        bUser.setOnAction(e -> {
+            createUserPager();
+            this.window.setScene(user);
+        });
+
+        checkOutVMenuLayout.getChildren().add(bPizza);
+        checkOutVMenuLayout.getChildren().add(hFiller1);
+        checkOutVMenuLayout.getChildren().add(bCart);
+        checkOutVMenuLayout.getChildren().add(hFiller2);
+        checkOutVMenuLayout.getChildren().add(bExit);
+
+        checkOutVMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(187, 153, 255), CornerRadii.EMPTY, Insets.EMPTY))));
+        checkOutHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
+
+        checkOutHMenuLayout.getChildren().add(vFiller);
+        checkOutHMenuLayout.getChildren().add(bUser);
+
+        try{
+            database.readData("ORDERS", null, null, null, null , null);
+            ResultSet rs = database.getRs();
+            HashMap<String, Integer> unOrderedOrders = new HashMap<>();
+            int sum = 0;
+            while (rs.next()) {
+                String[] pizzas = rs.getString(4).split(",");
+                for (String pizza : pizzas) {
+                    sum++;
+                    if (unOrderedOrders.containsKey(pizza)) {
+                        unOrderedOrders.put(pizza, unOrderedOrders.get(pizza) + 1);
+                    } else {
+                        unOrderedOrders.put(pizza, 1);
+                    }
+                }
+            }
+
+            ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
+
+            for (Map.Entry<String, Integer> set : unOrderedOrders.entrySet()) {
+                pieChartData.add(new PieChart.Data(set.getKey(), Double.parseDouble(String.valueOf(set.getValue()))/sum));
+            }
+            final PieChart chart = new PieChart(pieChartData);
+            for (final PieChart.Data data : chart.getData()) {
+                data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
+                {
+                    this.previusValue = data.getName();
+                    data.setName(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100 + "%");
+                });
+                data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, e ->
+                {
+                    data.setName(this.previusValue);
+                    this.previusValue = null;
+                });
+            }
+
+            chart.setTitle("Sold pizzas");
+            chart.setLabelLineLength(10);
+            chart.setLegendSide(Side.RIGHT);
+            checkOutLayout.setCenter(chart);
+
+        } catch (SQLException exception){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(exception);
+        }
+
+        checkOutLayout.setTop(checkOutHMenuLayout);
+        checkOutLayout.setLeft(checkOutVMenuLayout);
+        checkOutLayout.setRight(checkOutPayLayout);
+        checkOutLayout.setBottom(new BorderPane());
+
+        this.checkOut = new Scene(checkOutLayout, 800, 512);
+        this.checkOut.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+    }
+
+    private void createPizzaCreatorPage(){
+        BorderPane pizzaCreatorPageLayout = new BorderPane();
+        HBox pizzaCreatorPageHMenuLayout = new HBox();
+        VBox pizzaCreatorPageVMenuLayout = new VBox();
+        ScrollPane pizzaCreatorPagePizzasLayout = new ScrollPane();
+        ImageView exitImg = null;
+        ImageView cartImg = null;
+        ImageView pizzaImg = null;
+        ImageView userImg = null;
+        try {
+            FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
+            FileInputStream input3 = this.isAdmin ? new FileInputStream("src/resources/images/statistics.png") : new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
+            FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
+            exitImg = new ImageView(new Image(input1));
+            exitImg.setFitHeight(50);
+            exitImg.setFitWidth(50);
+            cartImg = new ImageView(new Image(input3));
+            cartImg.setFitHeight(50);
+            cartImg.setFitWidth(50);
+            pizzaImg = new ImageView(new Image(input4));
+            pizzaImg.setFitHeight(50);
+            pizzaImg.setFitWidth(50);
+            userImg = new ImageView(new Image(input5));
+            userImg.setFitHeight(50);
+            userImg.setFitWidth(50);
+        } catch (FileNotFoundException exception) {
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(exception);
+        }
+
+        Region vFiller = new Region();
+        vFiller.setPrefSize(10000,1);
+        Region hFiller1 = new Region();
+        hFiller1.setPrefSize(1,200);
+        Region hFiller2 = new Region();
+        hFiller2.setPrefSize(1,200);
+
+        Button bExit = new Button("", exitImg);
+        Button bCart = new Button("", cartImg);
+        Button bPizza = new Button("", pizzaImg);
+        Button bUser = new Button("", userImg);
+        Button bCreatePizza = new Button("Create Pizza");
+        Button bCreateTopping = new Button("Create Topping");
+        Button bClear = new Button("Clear items");
+        bExit.setOnAction(e -> {
+            this.cart.removeEverything();
+            this.window.setScene(login);
+        });
+        bCart.setOnAction(e -> {
+            if (this.isAdmin) {
+                createStatisticsPage();
+            } else {
+                createCheckOutPage();
+            }
+            this.window.setScene(checkOut);
+        });
+        bPizza.setOnAction(e -> {
+            createHomePage();
+            this.window.setScene(home);
+        });
+        bUser.setOnAction(e -> {
+            if (this.isAdmin){
+                createPizzaCreatorPage();
+            }else{
+                createUserPager();
+            }
+            this.window.setScene(user);
+        });
+        bCreatePizza.setOnAction(e -> {
+            String string = this.allowedItems.toString();
+            string = string.substring(1, string.length() - 1);
+            Stage dialogStage = new Stage();
+            GridPane dialogBoxLayout = new GridPane();
+            TextField nameField = new TextField("");
+            TextField priceField = new TextField("");
+            dialogBoxLayout.add(new Text("Pizza name:"), 0, 0);
+            dialogBoxLayout.add(nameField, 0, 1);
+            dialogBoxLayout.add(new Text("Pizza price:"), 0, 2);
+            dialogBoxLayout.add(priceField, 0, 3);
+
+            Scene stageScene = new Scene(dialogBoxLayout, 150, 100);
+            dialogStage.setScene(stageScene);
+            dialogStage.setTitle("PizzaCreator420");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            String finalString = string;
+            dialogStage.setOnCloseRequest(ee -> {
+                try{
+                    database.writeData("pizzas",nameField.getText() + ";" + priceField.getText() + ";" + finalString);
+                } catch (SQLException exception){
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
+                }
+                this.allowedItems.clear();
+                createPizzaCreatorPage();
+                this.window.setScene(user);
+            });
+            dialogStage.show();
+        });
+        bCreateTopping.setOnAction(e -> {
+            Stage dialogStage = new Stage();
+            GridPane dialogBoxLayout = new GridPane();
+            TextField nameField = new TextField("");
+            dialogBoxLayout.add(new Text("Topping name:"), 0, 0);
+            dialogBoxLayout.add(nameField, 0, 1);
+
+            Scene stageScene = new Scene(dialogBoxLayout, 150, 100);
+            dialogStage.setScene(stageScene);
+            dialogStage.setTitle("EpicToppingCreator420");
+            dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setOnCloseRequest(ee -> {
+                try{
+                    database.writeData("toppings",nameField.getText());
+                } catch (SQLException exception){
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
+                }
+                this.allowedItems.clear();
+                createPizzaCreatorPage();
+                this.window.setScene(user);
+            });
+            dialogStage.show();
+        });
+        bClear.setOnAction(e -> {
+            this.allowedItems.clear();
+            this.notAllowedItems.clear();
+            createPizzaCreatorPage();
+            this.window.setScene(user);
+        });
+
+        pizzaCreatorPageVMenuLayout.getChildren().add(bPizza);
+        pizzaCreatorPageVMenuLayout.getChildren().add(hFiller1);
+        pizzaCreatorPageVMenuLayout.getChildren().add(bCart);
+        pizzaCreatorPageVMenuLayout.getChildren().add(hFiller2);
+        pizzaCreatorPageVMenuLayout.getChildren().add(bExit);
+
+        pizzaCreatorPageVMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(187, 153, 255), CornerRadii.EMPTY, Insets.EMPTY))));
+        pizzaCreatorPageHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
+
+        pizzaCreatorPageHMenuLayout.getChildren().add(vFiller);
+        pizzaCreatorPageHMenuLayout.getChildren().add(bUser);
+
+        pizzaCreatorPagePizzasLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        pizzaCreatorPagePizzasLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+        //pizzaCreatorPagePizzasLayout.setContent(g);
+        pizzaCreatorPagePizzasLayout.setMaxSize(500,500);
+
+        VBox pizzaCreatorPageFilterLayout = new VBox();
+
+        pizzaCreatorPageFilterLayout.getChildren().add(bCreatePizza);
+        pizzaCreatorPageFilterLayout.getChildren().add(bClear);
+        try {
+            this.database.readData("toppings", null, null, null, null, null);
+            ResultSet rs = this.database.getRs();
+            while (rs.next()) {
+                CheckBox cb = new CheckBox(rs.getString(2));
+                cb.setId(String.valueOf(rs.getInt(1)));
+                cb.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
+                    if (cb.isSelected()) {
+                        cb.setSelected(false);
+                        allowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
+                    } else if (!cb.isSelected()) {
+                        cb.setSelected(true);
+                        cb.setIndeterminate(true);
+                        cb.setAllowIndeterminate(true);
+                        allowedItems.add(Integer.parseInt(cb.getId()));
+                    }
+                });
+                pizzaCreatorPageFilterLayout.getChildren().add(cb);
+            }
+        } catch (SQLException exception){
+            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+            System.out.println(exception);
+        }
+
+        pizzaCreatorPageFilterLayout.getChildren().add(bCreateTopping);
+
+        BorderPane pizzaCreatorPageMainLayout = new BorderPane();
+        pizzaCreatorPageMainLayout.setRight(pizzaCreatorPageFilterLayout);
+        pizzaCreatorPageMainLayout.setCenter(pizzaCreatorPagePizzasLayout);
+
+        pizzaCreatorPageLayout.setTop(pizzaCreatorPageHMenuLayout);
+        pizzaCreatorPageLayout.setLeft(pizzaCreatorPageVMenuLayout);
+        pizzaCreatorPageLayout.setCenter(pizzaCreatorPageMainLayout);
+        pizzaCreatorPageLayout.setBottom(new BorderPane());
+
+        this.user = new Scene(pizzaCreatorPageLayout, 800, 512);
+        this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     @Override
@@ -853,7 +1214,7 @@ public class PizzeriaApplication extends Application {
             while(rs.next()){
                 FileInputStream fileInputStream = null;
                 try {
-                    fileInputStream = new FileInputStream("src/resources/images/add.png");
+                    fileInputStream = this.isAdmin ? new FileInputStream("src/resources/images/remove.png") : new FileInputStream("src/resources/images/add.png");
                 } catch (FileNotFoundException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -868,7 +1229,21 @@ public class PizzeriaApplication extends Application {
                 int price = rs.getInt(3);
                 String toppingIds = rs.getString(4).replace(";",",");
 
-                addToCart.setOnAction(e -> this.cart.addItem(name, price));
+                addToCart.setOnAction(e -> {
+                    if (!this.isAdmin){
+                        this.cart.addItem(name, price);
+                    } else {
+                        try {
+                            this.database.deleteData("pizzas","NAME=\"" + name + "\"");
+                            createHomePage();
+                            this.window.setScene(this.home);
+                        } catch (SQLException exception) {
+                            System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                            System.out.println(exception);
+                        }
+                    }
+
+                });
 
                 database.readData("TOPPINGS","TOPPINGID IN (" + toppingIds + ")",true, "NAME", null,null);
                 ResultSet rs2 = database.getRs();
@@ -930,7 +1305,7 @@ public class PizzeriaApplication extends Application {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(exception);
         }
-
+        System.out.println(allowedItems);
     }
 
     public static void main(String[] args) {
