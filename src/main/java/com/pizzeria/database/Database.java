@@ -79,7 +79,7 @@ public class Database {
         if (Objects.equals(column, "PRICE")){
             preparedStmt.setInt(1, Integer.parseInt(value));
         } else {
-            preparedStmt.setString(1, Objects.equals(column, "PWD") ? DigestUtils.shaHex(value): value);
+            preparedStmt.setString(1, Objects.equals(column, "PWD") ? DigestUtils.shaHex(value) : (Objects.equals(column, "TOPPINGS") ? value.replace(", ", ";") : value));
         }
 
         preparedStmt.executeUpdate();

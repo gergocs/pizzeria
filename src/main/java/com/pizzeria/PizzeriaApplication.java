@@ -47,6 +47,7 @@ public class PizzeriaApplication extends Application {
 
     private boolean topFive = false;
     private boolean isAdmin = false;
+    private Boolean ascending = false;
 
     private String previusValue = null;
 
@@ -766,17 +767,48 @@ public class PizzeriaApplication extends Application {
 
         GridPane g = new GridPane();
         try {
-            this.database.readData("orders","USERNAME = \"" + this.uname + "\"", true, "TIME", null, null);
+            this.database.readData("orders","USERNAME = \"" + this.uname + "\"", this.ascending != null && this.ascending, this.ascending == null ? "PRICE" : "TIME", null, null);
             ResultSet rs = this.database.getRs();
+            CheckBox cb = new CheckBox("");
+            cb.allowIndeterminateProperty();
+            if (this.ascending == null){
+                cb.setIndeterminate(true);
+            } else {
+                cb.setSelected(this.ascending);
+            }
+
+            cb.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
+                if (cb.isIndeterminate()) {
+                    cb.setSelected(true);
+                    cb.setIndeterminate(false);
+                    cb.setAllowIndeterminate(false);
+                    this.ascending = false;
+                } else if (cb.isSelected()) {
+                    cb.setSelected(false);
+                    this.ascending = null;
+                } else if (!cb.isSelected()) {
+                    cb.setSelected(true);
+                    cb.setIndeterminate(true);
+                    cb.setAllowIndeterminate(true);
+                    this.ascending = true;
+                }
+                createUserPager();
+                this.window.setScene(this.user);
+            });
             g.add(new Text("Username"), 0, 0);
             g.add(new Text("Time"), 1, 0);
             g.add(new Text("Price"), 2, 0);
             g.add(new Text("Items"), 3, 0);
-            for (int i = 1; rs.next(); i++) {
+            g.add(cb, 4, 0);
+            g.add(new Text(this.ascending == null ? "decreasing" : (this.ascending ? "ascending" : "decreasing")), this.ascending == null ? 2 : 1, 1);
+            for (int i = 2; rs.next(); i++) {
+                String tmp = rs.getString(4);
+                tmp = tmp.replace(",",",\n");
+
                 g.add(new Text(rs.getString(1)), 0, i);
                 g.add(new Text(rs.getString(2)), 1, i);
                 g.add(new Text(rs.getString(3)), 2, i);
-                g.add(new Text(rs.getString(4)), 3, i);
+                g.add(new Text(tmp), 3, i);
             }
         } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
@@ -786,10 +818,10 @@ public class PizzeriaApplication extends Application {
         g.setHgap(10);
         g.setVgap(10);
         g.setPadding(new Insets(10, 10, 10, 10));
-        g.setPrefWidth(400);
+        g.setPrefWidth(450);
         userPageOrdersLayout.setContent(g);
-        userPageOrdersLayout.setPrefWidth(400);
-        userPageOrdersLayout.setMaxSize(400,500);
+        userPageOrdersLayout.setPrefWidth(450);
+        userPageOrdersLayout.setMaxSize(450,500);
 
         userPageMenuLayout.setCenter(userPageModifyLayout);
         userPageMenuLayout.setRight(userPageOrdersLayout);
@@ -887,11 +919,21 @@ public class PizzeriaApplication extends Application {
             database.readData("ORDERS", null, null, null, null , null);
             ResultSet rs = database.getRs();
             HashMap<String, Integer> unOrderedOrders = new HashMap<>();
-            int sum = 0;
+            HashMap<String, Integer> unOrderedUsers = new HashMap<>();
+
+            int sumOrders = 0;
+            int sumUsers = 0;
             while (rs.next()) {
                 String[] pizzas = rs.getString(4).split(",");
+                if (unOrderedUsers.containsKey(rs.getString(1))) {
+                    unOrderedUsers.put(rs.getString(1), unOrderedUsers.get(rs.getString(1)) + pizzas.length - 1);
+                } else {
+                    unOrderedUsers.put(rs.getString(1), pizzas.length - 1);
+                }
+                sumUsers += pizzas.length - 1;
+
                 for (String pizza : pizzas) {
-                    sum++;
+                    sumOrders++;
                     if (unOrderedOrders.containsKey(pizza)) {
                         unOrderedOrders.put(pizza, unOrderedOrders.get(pizza) + 1);
                     } else {
@@ -900,13 +942,21 @@ public class PizzeriaApplication extends Application {
                 }
             }
 
-            ObservableList<PieChart.Data> pieChartData = FXCollections.observableArrayList();
+            ObservableList<PieChart.Data> pieChartOrders = FXCollections.observableArrayList();
+            ObservableList<PieChart.Data> pieChartUsers = FXCollections.observableArrayList();
 
             for (Map.Entry<String, Integer> set : unOrderedOrders.entrySet()) {
-                pieChartData.add(new PieChart.Data(set.getKey(), Double.parseDouble(String.valueOf(set.getValue()))/sum));
+                pieChartOrders.add(new PieChart.Data(set.getKey(), Double.parseDouble(String.valueOf(set.getValue()))/sumOrders));
             }
-            final PieChart chart = new PieChart(pieChartData);
-            for (final PieChart.Data data : chart.getData()) {
+
+            for (Map.Entry<String, Integer> set : unOrderedUsers.entrySet()) {
+                pieChartUsers.add(new PieChart.Data(set.getKey(), Double.parseDouble(String.valueOf(set.getValue()))/sumUsers));
+            }
+
+            final PieChart orderChart = new PieChart(pieChartOrders);
+            final PieChart userChart = new PieChart(pieChartUsers);
+
+            for (final PieChart.Data data : orderChart.getData()) {
                 data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
                 {
                     this.previusValue = data.getName();
@@ -919,10 +969,42 @@ public class PizzeriaApplication extends Application {
                 });
             }
 
-            chart.setTitle("Sold pizzas");
-            chart.setLabelLineLength(10);
-            chart.setLegendSide(Side.RIGHT);
-            checkOutLayout.setCenter(chart);
+
+            for (final PieChart.Data data : userChart.getData()) {
+                data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
+                {
+                    this.previusValue = data.getName();
+                    data.setName(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100 + "%");
+                });
+                data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, e ->
+                {
+                    data.setName(this.previusValue);
+                    this.previusValue = null;
+                });
+            }
+
+            orderChart.setTitle("Sold pizzas");
+            orderChart.setLabelLineLength(10);
+            orderChart.setLegendSide(Side.BOTTOM);
+
+            userChart.setTitle("Who ordered most?");
+            userChart.setLabelLineLength(10);
+            userChart.setLegendSide(Side.BOTTOM);
+
+            ScrollPane tmpLayout = new ScrollPane();
+            VBox tmptmpLayout = new VBox();
+
+            tmpLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            tmpLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+
+            tmpLayout.setMaxSize(700,500);
+
+            tmptmpLayout.getChildren().add(orderChart);
+            tmptmpLayout.getChildren().add(userChart);
+
+            tmpLayout.setContent(tmptmpLayout);
+
+            checkOutLayout.setCenter(tmpLayout);
 
         } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
@@ -942,7 +1024,6 @@ public class PizzeriaApplication extends Application {
         BorderPane pizzaCreatorPageLayout = new BorderPane();
         HBox pizzaCreatorPageHMenuLayout = new HBox();
         VBox pizzaCreatorPageVMenuLayout = new VBox();
-        ScrollPane pizzaCreatorPagePizzasLayout = new ScrollPane();
         ImageView exitImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
@@ -1034,7 +1115,19 @@ public class PizzeriaApplication extends Application {
                         dialogStage.close();
                         return;
                     }
-                    database.writeData("pizzas",str + ";" + str2 + ";" + finalString);
+
+                    database.readData("pizzas", "NAME = \"" + str + "\"", null, null, null, null);
+
+                    ResultSet rs = database.getRs();
+
+                    if (rs.isBeforeFirst()){
+                        database.updateData("pizzas", "PRICE" , str2, "NAME = \"" + str + "\"");
+                        database.updateData("pizzas", "TOPPINGS" , finalString, "NAME = \"" + str + "\"");
+                    } else {
+                        database.writeData("pizzas",str + ";" + str2 + ";" + finalString);
+                    }
+
+
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -1084,6 +1177,16 @@ public class PizzeriaApplication extends Application {
                         dialogStage.close();
                         return;
                     }
+
+                    database.readData("toppings", "NAME = \"" + str + "\"", null, null, null, null);
+
+                    ResultSet rs = database.getRs();
+
+                    if (rs.isBeforeFirst()){
+                        dialogStage.close();
+                        return;
+                    }
+
                     database.writeData("toppings",str);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
@@ -1133,13 +1236,10 @@ public class PizzeriaApplication extends Application {
         pizzaCreatorPageHMenuLayout.getChildren().add(vFiller);
         pizzaCreatorPageHMenuLayout.getChildren().add(bUser);
 
-        pizzaCreatorPagePizzasLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        pizzaCreatorPagePizzasLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-
-        //pizzaCreatorPagePizzasLayout.setContent(g);
-        pizzaCreatorPagePizzasLayout.setMaxSize(500,500);
-
         VBox pizzaCreatorPageFilterLayout = new VBox();
+        ScrollPane pizzaCreatorPageMainLayout = new ScrollPane();
+        pizzaCreatorPageMainLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        pizzaCreatorPageMainLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         pizzaCreatorPageFilterLayout.getChildren().add(bCreatePizza);
         pizzaCreatorPageFilterLayout.getChildren().add(bClear);
@@ -1169,9 +1269,7 @@ public class PizzeriaApplication extends Application {
 
         pizzaCreatorPageFilterLayout.getChildren().add(bCreateTopping);
 
-        BorderPane pizzaCreatorPageMainLayout = new BorderPane();
-        pizzaCreatorPageMainLayout.setRight(pizzaCreatorPageFilterLayout);
-        pizzaCreatorPageMainLayout.setCenter(pizzaCreatorPagePizzasLayout);
+        pizzaCreatorPageMainLayout.setContent(pizzaCreatorPageFilterLayout);
 
         pizzaCreatorPageLayout.setTop(pizzaCreatorPageHMenuLayout);
         pizzaCreatorPageLayout.setLeft(pizzaCreatorPageVMenuLayout);
