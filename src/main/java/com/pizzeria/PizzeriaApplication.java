@@ -145,7 +145,7 @@ public class PizzeriaApplication extends Application {
                 errorMessage += "Wrong password\n";
             }
 
-            if (address.equals("") || address.contains(" ")){
+            if (address.equals("")){
                 errorMessage += "Wrong address\n";
             }
 
@@ -353,6 +353,11 @@ public class PizzeriaApplication extends Application {
         homePagePizzasLayout.setMaxSize(500,500);
 
         VBox homePageFilterLayout = new VBox();
+        ScrollPane homePageScrollLayout = new ScrollPane();
+
+        homePageScrollLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        homePageScrollLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        homePageScrollLayout.setMinWidth(150);
 
         homePageFilterLayout.getChildren().add(bTop);
         homePageFilterLayout.getChildren().add(bFilter);
@@ -388,8 +393,10 @@ public class PizzeriaApplication extends Application {
             System.out.println(exception);
         }
 
+        homePageScrollLayout.setContent(homePageFilterLayout);
+
         BorderPane homePageMainLayout = new BorderPane();
-        homePageMainLayout.setRight(homePageFilterLayout);
+        homePageMainLayout.setRight(homePageScrollLayout);
         homePageMainLayout.setCenter(homePagePizzasLayout);
 
         homePageLayout.setTop(homePageHMenuLayout);
@@ -960,7 +967,7 @@ public class PizzeriaApplication extends Application {
                 data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
                 {
                     this.previusValue = data.getName();
-                    data.setName(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100 + "%");
+                    data.setName((String.valueOf(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100).substring(0,2) + "%"));
                 });
                 data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, e ->
                 {
@@ -974,7 +981,7 @@ public class PizzeriaApplication extends Application {
                 data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
                 {
                     this.previusValue = data.getName();
-                    data.setName(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100 + "%");
+                    data.setName((String.valueOf(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100).substring(0,2) + "%"));
                 });
                 data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, e ->
                 {
