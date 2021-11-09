@@ -67,8 +67,7 @@ public class PizzeriaApplication extends Application {
         /* Buttons */
         Button bLogin = new Button("Login");
         bLogin.setDefaultButton(true);
-        bLogin.setLayoutX(0);
-        bLogin.setLayoutY(0);
+        bLogin.getStyleClass().add("success");
         bLogin.setOnAction(e -> {
             this.uname = tFieldLoginUserName.getText();
             String password = tFieldLoginPassword.getText();
@@ -120,8 +119,7 @@ public class PizzeriaApplication extends Application {
         });
         Button bRegister = new Button("Register");
         bRegister.setDefaultButton(true);
-        bRegister.setLayoutX(0);
-        bRegister.setLayoutY(0);
+        bRegister.getStyleClass().add("success");
         bRegister.setOnAction(e -> {
             errorMessage = "";
             String uname = tFieldUserName.getText();
@@ -198,10 +196,12 @@ public class PizzeriaApplication extends Application {
         Button bChangeToRegister = new Button("Register");
         bChangeToRegister.setLayoutX(250);
         bChangeToRegister.setLayoutY(220);
+        bChangeToRegister.getStyleClass().add("info");
         bChangeToRegister.setOnAction(e -> this.window.setScene(this.register));
         Button bChangeToLogin = new Button("Login");
         bChangeToLogin.setLayoutX(200);
         bChangeToLogin.setLayoutY(220);
+        bChangeToLogin.getStyleClass().add("info");
         bChangeToLogin.setOnAction(e -> this.window.setScene(this.login));
 
         /* layouts */
@@ -285,6 +285,11 @@ public class PizzeriaApplication extends Application {
         Button bFilter = new Button("Filter");
         Button bClear = new Button("Clear filter");
         Button bTop = new Button("Top 5");
+
+        bFilter.getStyleClass().add("primary");
+        bClear.getStyleClass().add("danger");
+        bTop.getStyleClass().add("success");
+
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
@@ -440,6 +445,9 @@ public class PizzeriaApplication extends Application {
         Button bPizza = new Button("", pizzaImg);
         Button bUser = new Button("", userImg);
         Button bPay = new Button("Pay");
+
+        bPay.getStyleClass().add("success");
+
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
@@ -509,6 +517,8 @@ public class PizzeriaApplication extends Application {
             removeFromCartImg.setFitWidth(50);
 
             Button removeFromCart = new Button("", removeFromCartImg);
+
+            removeFromCart.getStyleClass().add("danger");
 
             removeFromCart.setOnAction(e -> {
                 cart.removeItem(key);
@@ -596,8 +606,10 @@ public class PizzeriaApplication extends Application {
         Button bUser = new Button("", userImg);
         Button bUpdate = new Button("Update");
         Button bDelete = new Button("Delete registration");
-        bUpdate.setLayoutX(0);
-        bUpdate.setLayoutY(0);
+
+        bUpdate.getStyleClass().add("success");
+        bDelete.getStyleClass().add("danger");
+
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
@@ -851,7 +863,11 @@ public class PizzeriaApplication extends Application {
             this.window.setScene(home);
         });
         bUser.setOnAction(e -> {
-            createUserPager();
+            if (this.isAdmin){
+                createPizzaCreatorPage();
+            }else{
+                createUserPager();
+            }
             this.window.setScene(user);
         });
 
@@ -967,6 +983,11 @@ public class PizzeriaApplication extends Application {
         Button bCreatePizza = new Button("Create Pizza");
         Button bCreateTopping = new Button("Create Topping");
         Button bClear = new Button("Clear items");
+
+        bCreatePizza.getStyleClass().add("success");
+        bCreateTopping.getStyleClass().add("info");
+        bClear.getStyleClass().add("danger");
+
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
             this.window.setScene(login);
@@ -1000,6 +1021,9 @@ public class PizzeriaApplication extends Application {
             TextField priceField = new TextField("");
             Button bDone = new Button("Done");
             Button bCancel = new Button("Cancel");
+
+            bDone.getStyleClass().add("success");
+            bCancel.getStyleClass().add("danger");
 
             String finalString = string;
             bDone.setOnAction(ee -> {
@@ -1036,9 +1060,11 @@ public class PizzeriaApplication extends Application {
             dialogBoxLayout.add(bCancel, 0, 5);
 
             Scene stageScene = new Scene(dialogBoxLayout, 150, 150);
+            stageScene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
             dialogStage.setScene(stageScene);
             dialogStage.setTitle("PizzaCreator420");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setResizable(false);
             dialogStage.show();
         });
         bCreateTopping.setOnAction(e -> {
@@ -1047,6 +1073,9 @@ public class PizzeriaApplication extends Application {
             TextField nameField = new TextField("");
             Button bDone = new Button("Done");
             Button bCancel = new Button("Cancel");
+
+            bDone.getStyleClass().add("success");
+            bCancel.getStyleClass().add("danger");
 
             bDone.setOnAction(ee -> {
                 try{
@@ -1078,9 +1107,11 @@ public class PizzeriaApplication extends Application {
             dialogBoxLayout.add(bCancel, 0, 3);
 
             Scene stageScene = new Scene(dialogBoxLayout, 150, 150);
+            stageScene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
             dialogStage.setScene(stageScene);
-            dialogStage.setTitle("EpicToppingCreator420");
+            dialogStage.setTitle("EpicToppingCreator");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
+            dialogStage.setResizable(false);
             dialogStage.show();
         });
         bClear.setOnAction(e -> {
@@ -1247,6 +1278,11 @@ public class PizzeriaApplication extends Application {
                 addToCartImg.setFitHeight(50);
                 addToCartImg.setFitWidth(50);
                 Button addToCart = new Button("", addToCartImg);
+                if (this.isAdmin){
+                    addToCart.getStyleClass().add("danger");
+                } else {
+                    addToCart.getStyleClass().add("success");
+                }
                 String name = rs.getString(2);
                 int price = rs.getInt(3);
                 String toppingIds = rs.getString(4).replace(";",",");
