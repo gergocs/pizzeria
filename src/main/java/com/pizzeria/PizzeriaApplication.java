@@ -49,8 +49,10 @@ public class PizzeriaApplication extends Application {
     private boolean isAdmin = false;
     private Boolean ascending = false;
 
-    private String previusValue = null;
+    private String previousValue = null;
 
+    /** create scenes
+     */
     private void setScenes(){
         GridPane registerLayout = new GridPane();
         GridPane loginLayout = new GridPane();
@@ -241,6 +243,8 @@ public class PizzeriaApplication extends Application {
         this.register.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
+    /** Create homePage
+     */
     private void createHomePage() {
         BorderPane homePageLayout = new BorderPane();
         HBox homePageHMenuLayout = new HBox();
@@ -408,6 +412,8 @@ public class PizzeriaApplication extends Application {
         this.home.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
+    /** Create checkoutPage
+     */
     private void createCheckOutPage() {
         BorderPane checkOutLayout = new BorderPane();
         VBox checkOutPayLayout = new VBox();
@@ -560,6 +566,8 @@ public class PizzeriaApplication extends Application {
         this.checkOut.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
+    /** Create userPage
+     */
     private void createUserPager() {
         BorderPane userPageLayout = new BorderPane();
         BorderPane userPageMenuLayout = new BorderPane();
@@ -842,6 +850,8 @@ public class PizzeriaApplication extends Application {
         this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
+    /** Create statisticsPage
+     */
     private void createStatisticsPage(){
         BorderPane checkOutLayout = new BorderPane();
         VBox checkOutPayLayout = new VBox();
@@ -966,13 +976,13 @@ public class PizzeriaApplication extends Application {
             for (final PieChart.Data data : orderChart.getData()) {
                 data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
                 {
-                    this.previusValue = data.getName();
+                    this.previousValue = data.getName();
                     data.setName((String.valueOf(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100).substring(0,2) + "%"));
                 });
                 data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, e ->
                 {
-                    data.setName(this.previusValue);
-                    this.previusValue = null;
+                    data.setName(this.previousValue);
+                    this.previousValue = null;
                 });
             }
 
@@ -980,13 +990,13 @@ public class PizzeriaApplication extends Application {
             for (final PieChart.Data data : userChart.getData()) {
                 data.getNode().addEventHandler(MouseEvent.MOUSE_ENTERED_TARGET, e ->
                 {
-                    this.previusValue = data.getName();
+                    this.previousValue = data.getName();
                     data.setName((String.valueOf(BigDecimal.valueOf(data.getPieValue()).setScale(3, RoundingMode.HALF_UP).doubleValue()*100).substring(0,2) + "%"));
                 });
                 data.getNode().addEventHandler(MouseEvent.MOUSE_EXITED_TARGET, e ->
                 {
-                    data.setName(this.previusValue);
-                    this.previusValue = null;
+                    data.setName(this.previousValue);
+                    this.previousValue = null;
                 });
             }
 
@@ -1027,6 +1037,8 @@ public class PizzeriaApplication extends Application {
         this.checkOut.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
+    /** Create pizzaCreatorPage
+     */
     private void createPizzaCreatorPage(){
         BorderPane pizzaCreatorPageLayout = new BorderPane();
         HBox pizzaCreatorPageHMenuLayout = new HBox();
@@ -1287,6 +1299,8 @@ public class PizzeriaApplication extends Application {
         this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
+    /** generate pizzas for the homePage
+     */
     private GridPane generateItems() {
         GridPane gridItems = new GridPane();
         gridItems.setHgap(100);
@@ -1444,6 +1458,8 @@ public class PizzeriaApplication extends Application {
         return gridItems;
     }
 
+    /** Sort String-integer Map
+     */
     private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap)
     {
 
