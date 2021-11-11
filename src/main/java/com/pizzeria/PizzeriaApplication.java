@@ -1,7 +1,14 @@
 package com.pizzeria;
 
-import com.pizzeria.cart.Cart;
-import com.pizzeria.database.Database;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
+import java.util.regex.Pattern;
+
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -20,36 +27,30 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+
 import org.apache.commons.codec.digest.DigestUtils;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
-import java.util.regex.Pattern;
+import com.pizzeria.cart.Cart;
+import com.pizzeria.database.Database;
 
 public class PizzeriaApplication extends Application {
-
-    private Stage window;
-    private Scene login, register, home, checkOut, user;
-
-    private String errorMessage = "";
-    private String uname;
-
-    private Database database;
-    private final Cart cart = new Cart();
-
-    private final ArrayList<Integer> allowedItems = new ArrayList<>();
-    private final ArrayList<Integer> notAllowedItems = new ArrayList<>();
 
     private boolean topFive = false;
     private boolean isAdmin = false;
     private Boolean ascending = false;
 
+    private String errorMessage = "";
+    private String uname;
     private String previousValue = null;
+
+    private final ArrayList<Integer> allowedItems = new ArrayList<>();
+    private final ArrayList<Integer> notAllowedItems = new ArrayList<>();
+
+    private Database database;
+    private final Cart cart = new Cart();
+
+    private Stage window;
+    private Scene login, register, home, checkOut, user;
 
     /** create scenes
      */
@@ -57,7 +58,6 @@ public class PizzeriaApplication extends Application {
         GridPane registerLayout = new GridPane();
         GridPane loginLayout = new GridPane();
 
-        /* TextFields */
         TextField tFieldUserName = new TextField();
         PasswordField tFieldPassword = new PasswordField();
         PasswordField tFieldPasswordAgain = new PasswordField();
@@ -67,33 +67,36 @@ public class PizzeriaApplication extends Application {
         TextField tFieldLoginUserName = new TextField();
         PasswordField tFieldLoginPassword = new PasswordField();
 
-        /* Buttons */
         Button bLogin = new Button("Login");
+        Button bRegister = new Button("Register");
+        Button bChangeToRegister = new Button("Register");
+        Button bChangeToLogin = new Button("Login");
         bLogin.setDefaultButton(true);
         bLogin.getStyleClass().add("success");
         bLogin.setOnAction(e -> {
             this.uname = tFieldLoginUserName.getText();
             String password = tFieldLoginPassword.getText();
-            errorMessage = "";
+            this.errorMessage = "";
 
-            if (uname.equals("")){
-                errorMessage += "Wrong username\n";
+            if (this.uname.equals("")){
+                this.errorMessage += "Wrong username\n";
             }
 
             if (password.equals("")){
-                errorMessage += "Wrong password\n";
+                this.errorMessage += "Wrong password\n";
             }
 
-            if (errorMessage.equals("")){
+            if (this.errorMessage.equals("")){
                 try {
-                    database.readData("CLIENTS",
-                            "USERNAME=\"" + uname + "\" AND PWD=\"" + DigestUtils.shaHex(password) + "\""
-                            , null, null
-                            , null,
+                    this.database.readData("CLIENTS",
+                            "USERNAME=\"" + this.uname + "\" AND PWD=\"" + DigestUtils.shaHex(password) + "\"",
+                            null,
+                            null,
+                            null,
                             null);
-                    ResultSet rs = database.getRs();
+                    ResultSet rs = this.database.getRs();
                     if (!rs.isBeforeFirst()){
-                        errorMessage += "Invalid username or Password";
+                        this.errorMessage += "Invalid username or Password";
                     } else {
                         rs.next();
                         this.isAdmin = rs.getBoolean(5);
@@ -104,27 +107,27 @@ public class PizzeriaApplication extends Application {
                 }
             }
 
-            if (!errorMessage.equals("")){
-                loginLayout.add(new Text(errorMessage), 1, 6);
+            if (!this.errorMessage.equals("")){
+                loginLayout.add(new Text(this.errorMessage), 1, 6);
                 try {
-                    login = new Scene(loginLayout, 800, 512);
+                    this.login = new Scene(loginLayout, 800, 512);
                 }catch (IllegalArgumentException ignored){}
 
-                this.window.setScene(login);
+                this.window.setScene(this.login);
                 return;
             }
 
             tFieldLoginUserName.clear();
             tFieldLoginPassword.clear();
 
-            createHomePage();
-            window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
-        Button bRegister = new Button("Register");
+
         bRegister.setDefaultButton(true);
         bRegister.getStyleClass().add("success");
         bRegister.setOnAction(e -> {
-            errorMessage = "";
+            this.errorMessage = "";
             String uname = tFieldUserName.getText();
             String password = tFieldPassword.getText();
             String passwordAgain = tFieldPasswordAgain.getText();
@@ -132,11 +135,11 @@ public class PizzeriaApplication extends Application {
             String address = tFieldAddress.getText();
 
             if (uname.equals("") || uname.contains(" ")){
-                errorMessage += "Wrong username\n";
+                this.errorMessage += "Wrong username\n";
             }
 
             if (!Objects.equals(password, passwordAgain)){
-                errorMessage += "The passwords doesn't match\n";
+                this.errorMessage += "The passwords doesn't match\n";
             }
 
             String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–{}:;',?/*~$^+=<>]).{8,20}$";
@@ -144,24 +147,24 @@ public class PizzeriaApplication extends Application {
             Pattern pattern = Pattern.compile(PASSWORD_PATTERN);
 
             if (!pattern.matcher(password).matches()){
-                errorMessage += "Wrong password\n";
+                this.errorMessage += "Wrong password\n";
             }
 
             if (address.equals("")){
-                errorMessage += "Wrong address\n";
+                this.errorMessage += "Wrong address\n";
             }
 
-            if (errorMessage.equals("")){
+            if (this.errorMessage.equals("")){
                 try {
-                    database.readData("CLIENTS"
-                            ,"USERNAME=\"" + uname + "\""
-                            ,null
-                            ,null
-                            ,null
-                            ,null);
-                    ResultSet rs = database.getRs();
+                    this.database.readData("CLIENTS"
+                            ,"USERNAME=\"" + uname + "\"",
+                            null,
+                            null,
+                            null,
+                            null);
+                    ResultSet rs = this.database.getRs();
                     if (rs.isBeforeFirst()){
-                        errorMessage += "Username already in use";
+                        this.errorMessage += "Username already in use";
                     }
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
@@ -169,18 +172,18 @@ public class PizzeriaApplication extends Application {
                 }
             }
 
-            if (!Objects.equals(errorMessage, "")){
-                registerLayout.add(new Text(errorMessage), 1, 6);
+            if (!Objects.equals(this.errorMessage, "")){
+                registerLayout.add(new Text(this.errorMessage), 1, 6);
                 try {
-                    register = new Scene(registerLayout, 800, 512);
-                    this.register.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+                    this.register = new Scene(registerLayout, 800, 512);
+                    this.register.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
                 }catch (IllegalArgumentException ignored){}
 
-                this.window.setScene(register);
+                this.window.setScene(this.register);
                 return;
             }
             try{
-                database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address);
+                this.database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address);
             } catch (SQLException exception){
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                 System.out.println(exception);
@@ -193,21 +196,18 @@ public class PizzeriaApplication extends Application {
             tFieldPasswordAgain.clear();
             tFieldAddress.clear();
 
-            this.window.setScene(login);
+            this.window.setScene(this.login);
         });
 
-        Button bChangeToRegister = new Button("Register");
         bChangeToRegister.setLayoutX(250);
         bChangeToRegister.setLayoutY(220);
         bChangeToRegister.getStyleClass().add("info");
         bChangeToRegister.setOnAction(e -> this.window.setScene(this.register));
-        Button bChangeToLogin = new Button("Login");
+
         bChangeToLogin.setLayoutX(200);
         bChangeToLogin.setLayoutY(220);
         bChangeToLogin.getStyleClass().add("info");
         bChangeToLogin.setOnAction(e -> this.window.setScene(this.login));
-
-        /* layouts */
 
         registerLayout.setPadding(new Insets(10, 10, 10, 10));
         registerLayout.setVgap(5);
@@ -239,17 +239,21 @@ public class PizzeriaApplication extends Application {
         loginLayout.add(bChangeToRegister, 1, 2);
         this.login = new Scene(loginLayout, 800, 512);
         this.register = new Scene(registerLayout, 800, 512);
-        this.login.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
-        this.register.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.login.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.register.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     /** Create homePage
      */
     private void createHomePage() {
+        BorderPane homePageMainLayout = new BorderPane();
         BorderPane homePageLayout = new BorderPane();
         HBox homePageHMenuLayout = new HBox();
         VBox homePageVMenuLayout = new VBox();
         ScrollPane homePagePizzasLayout = new ScrollPane();
+        VBox homePageFilterLayout = new VBox();
+        ScrollPane homePageScrollLayout = new ScrollPane();
+        GridPane g = this.generateItems();
         ImageView exitImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
@@ -297,44 +301,44 @@ public class PizzeriaApplication extends Application {
 
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
-            this.window.setScene(login);
+            this.window.setScene(this.login);
         });
         bCart.setOnAction(e -> {
             if (this.isAdmin) {
-                createStatisticsPage();
+                this.createStatisticsPage();
             } else {
-                createCheckOutPage();
+                this.createCheckOutPage();
             }
-            this.window.setScene(checkOut);
+            this.window.setScene(this.checkOut);
         });
         bPizza.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
         bUser.setOnAction(e -> {
             if (this.isAdmin){
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
             }else{
-                createUserPager();
+                this.createUserPager();
             }
-            this.window.setScene(user);
+            this.window.setScene(this.user);
         });
         bFilter.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
         bClear.setOnAction(e -> {
             this.allowedItems.clear();
             this.notAllowedItems.clear();
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
         bTop.setOnAction(e -> {
             this.allowedItems.clear();
             this.notAllowedItems.clear();
-            topFive = true;
-            createHomePage();
-            this.window.setScene(home);
+            this.topFive = true;
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
 
         homePageVMenuLayout.getChildren().add(bPizza);
@@ -351,13 +355,9 @@ public class PizzeriaApplication extends Application {
 
         homePagePizzasLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         homePagePizzasLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        GridPane g = generateItems();
 
         homePagePizzasLayout.setContent(g);
         homePagePizzasLayout.setMaxSize(500,500);
-
-        VBox homePageFilterLayout = new VBox();
-        ScrollPane homePageScrollLayout = new ScrollPane();
 
         homePageScrollLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         homePageScrollLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
@@ -378,16 +378,16 @@ public class PizzeriaApplication extends Application {
                         cb.setSelected(true);
                         cb.setIndeterminate(false);
                         cb.setAllowIndeterminate(false);
-                        notAllowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
+                        this.notAllowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
                     } else if (cb.isSelected()) {
                         cb.setSelected(false);
-                        allowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
-                        notAllowedItems.add(Integer.parseInt(cb.getId()));
+                        this.allowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
+                        this.notAllowedItems.add(Integer.parseInt(cb.getId()));
                     } else if (!cb.isSelected()) {
                         cb.setSelected(true);
                         cb.setIndeterminate(true);
                         cb.setAllowIndeterminate(true);
-                        allowedItems.add(Integer.parseInt(cb.getId()));
+                        this.allowedItems.add(Integer.parseInt(cb.getId()));
                     }
                 });
                 homePageFilterLayout.getChildren().add(cb);
@@ -399,7 +399,6 @@ public class PizzeriaApplication extends Application {
 
         homePageScrollLayout.setContent(homePageFilterLayout);
 
-        BorderPane homePageMainLayout = new BorderPane();
         homePageMainLayout.setRight(homePageScrollLayout);
         homePageMainLayout.setCenter(homePagePizzasLayout);
 
@@ -409,7 +408,7 @@ public class PizzeriaApplication extends Application {
         homePageLayout.setBottom(new BorderPane());
 
         this.home = new Scene(homePageLayout, 800, 512);
-        this.home.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.home.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     /** Create checkoutPage
@@ -420,6 +419,7 @@ public class PizzeriaApplication extends Application {
         ScrollPane checkOutOrdersLayout = new ScrollPane();
         HBox checkOutHMenuLayout = new HBox();
         VBox checkOutVMenuLayout = new VBox();
+        GridPane checkOutCartLayout = new GridPane();
 
         ImageView exitImg = null;
         ImageView cartImg = null;
@@ -464,15 +464,15 @@ public class PizzeriaApplication extends Application {
 
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
-            this.window.setScene(login);
+            this.window.setScene(this.login);
         });
         bCart.setOnAction(e -> {
-            createCheckOutPage();
-            this.window.setScene(checkOut);
+            this.createCheckOutPage();
+            this.window.setScene(this.checkOut);
         });
         bPizza.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
         bPay.setOnAction(e -> {
             try{
@@ -483,16 +483,16 @@ public class PizzeriaApplication extends Application {
             }
 
             this.cart.removeEverything();
-            this.window.setScene(home);
+            this.window.setScene(this.home);
         });
 
         bUser.setOnAction(e -> {
             if (this.isAdmin){
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
             }else{
-                createUserPager();
+                this.createUserPager();
             }
-            this.window.setScene(user);
+            this.window.setScene(this.user);
         });
 
         bPay.setPrefSize(100,100);
@@ -512,11 +512,9 @@ public class PizzeriaApplication extends Application {
         checkOutOrdersLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         checkOutOrdersLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        GridPane g = new GridPane();
-
-        for (int i = 0; i < cart.getKeys().size(); i++) {
-            String key = cart.getKeys().get(i);
-            Integer value = cart.getValues().get(i);
+        for (int i = 0; i < this.cart.getKeys().size(); i++) {
+            String key = this.cart.getKeys().get(i);
+            Integer value = this.cart.getValues().get(i);
 
             FileInputStream fileInputStream = null;
             try {
@@ -535,25 +533,25 @@ public class PizzeriaApplication extends Application {
             removeFromCart.getStyleClass().add("danger");
 
             removeFromCart.setOnAction(e -> {
-                cart.removeItem(key);
-                createCheckOutPage();
-                this.window.setScene(checkOut);
+                this.cart.removeItem(key);
+                this.createCheckOutPage();
+                this.window.setScene(this.checkOut);
             });
 
-            g.add(new Text(key), 0, i);
-            g.add(new Text(value.toString()), 1, i);
-            g.add(removeFromCart, 2, i);
+            checkOutCartLayout.add(new Text(key), 0, i);
+            checkOutCartLayout.add(new Text(value.toString()), 1, i);
+            checkOutCartLayout.add(removeFromCart, 2, i);
         }
 
-        if (cart.getKeys().size() == 0){
-            g.add(new Text("There is nothing in your cart :("),0,0);
+        if (this.cart.getKeys().size() == 0){
+            checkOutCartLayout.add(new Text("There is nothing in your cart :("),0,0);
         }else{
             checkOutPayLayout.getChildren().add(new Text("Total:"));
-            checkOutPayLayout.getChildren().add(new Text(cart.getPrice().toString()));
+            checkOutPayLayout.getChildren().add(new Text(this.cart.getPrice().toString()));
             checkOutPayLayout.getChildren().add(bPay);
         }
 
-        checkOutOrdersLayout.setContent(g);
+        checkOutOrdersLayout.setContent(checkOutCartLayout);
         checkOutOrdersLayout.setMaxSize(400,500);
 
         checkOutLayout.setTop(checkOutHMenuLayout);
@@ -563,7 +561,7 @@ public class PizzeriaApplication extends Application {
         checkOutLayout.setBottom(new BorderPane());
 
         this.checkOut = new Scene(checkOutLayout, 800, 512);
-        this.checkOut.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.checkOut.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     /** Create userPage
@@ -575,6 +573,7 @@ public class PizzeriaApplication extends Application {
         GridPane userPageModifyLayout = new GridPane();
         HBox userPageHMenuLayout = new HBox();
         VBox userPageVMenuLayout = new VBox();
+        GridPane userPageOrderLayout = new GridPane();
 
         ImageView exitImg = null;
         ImageView cartImg = null;
@@ -628,41 +627,41 @@ public class PizzeriaApplication extends Application {
 
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
-            this.window.setScene(login);
+            this.window.setScene(this.login);
         });
         bCart.setOnAction(e -> {
             if (this.isAdmin) {
-                createStatisticsPage();
+                this.createStatisticsPage();
             } else {
-                createCheckOutPage();
+                this.createCheckOutPage();
             }
-            this.window.setScene(checkOut);
+            this.window.setScene(this.checkOut);
         });
         bPizza.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
 
         bUser.setOnAction(e -> {
             if (this.isAdmin){
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
             }else{
-                createUserPager();
+                this.createUserPager();
             }
-            this.window.setScene(user);
+            this.window.setScene(this.user);
         });
 
         bUpdate.setOnAction(e -> {
             this.errorMessage = "";
             if (!tFieldUserName.getText().equals("")){
                     try {
-                        database.readData("CLIENTS"
-                                , "USERNAME=\"" + uname + "\""
-                                , null
-                                , null
-                                , null
-                                , null);
-                        ResultSet rs = database.getRs();
+                        this.database.readData("CLIENTS",
+                                "USERNAME=\"" + this.uname + "\"",
+                                null,
+                                null,
+                                null,
+                                null);
+                        ResultSet rs = this.database.getRs();
                         if (rs.isBeforeFirst()) {
                             this.errorMessage += "Username already in use";
                         }
@@ -670,9 +669,9 @@ public class PizzeriaApplication extends Application {
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
                     }
-                if (errorMessage.equals("")){
+                if (this.errorMessage.equals("")){
                     try{
-                        database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                        this.database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
                     } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
@@ -691,9 +690,9 @@ public class PizzeriaApplication extends Application {
                 if (!pattern.matcher(tFieldPassword.getText()).matches()){
                     this.errorMessage += "Wrong password\n";
                 }
-                if (errorMessage.equals("")){
+                if (this.errorMessage.equals("")){
                     try{
-                        database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                        this.database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
                     } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
@@ -702,7 +701,7 @@ public class PizzeriaApplication extends Application {
             }
             if (!tFieldPhoneNumber.getText().equals("")){
                 try{
-                    database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"");
+                    this.database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"");
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -710,17 +709,17 @@ public class PizzeriaApplication extends Application {
             }
             if (!tFieldAddress.getText().equals("")){
                 try{
-                    database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"");
+                    this.database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"");
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
                 }
             }
             if (this.errorMessage.equals("")){
-                this.window.setScene(login);
+                this.window.setScene(this.login);
                 return;
             }
-            createUserPager();
+            this.createUserPager();
             this.window.setScene(this.user);
         });
 
@@ -780,7 +779,6 @@ public class PizzeriaApplication extends Application {
         userPageOrdersLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         userPageOrdersLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        GridPane g = new GridPane();
         try {
             this.database.readData("orders","USERNAME = \"" + this.uname + "\"", this.ascending != null && this.ascending, this.ascending == null ? "PRICE" : "TIME", null, null);
             ResultSet rs = this.database.getRs();
@@ -807,34 +805,34 @@ public class PizzeriaApplication extends Application {
                     cb.setAllowIndeterminate(true);
                     this.ascending = true;
                 }
-                createUserPager();
+                this.createUserPager();
                 this.window.setScene(this.user);
             });
-            g.add(new Text("Username"), 0, 0);
-            g.add(new Text("Time"), 1, 0);
-            g.add(new Text("Price"), 2, 0);
-            g.add(new Text("Items"), 3, 0);
-            g.add(cb, 4, 0);
-            g.add(new Text(this.ascending == null ? "decreasing" : (this.ascending ? "ascending" : "decreasing")), this.ascending == null ? 2 : 1, 1);
+            userPageOrderLayout.add(new Text("Username"), 0, 0);
+            userPageOrderLayout.add(new Text("Time"), 1, 0);
+            userPageOrderLayout.add(new Text("Price"), 2, 0);
+            userPageOrderLayout.add(new Text("Items"), 3, 0);
+            userPageOrderLayout.add(cb, 4, 0);
+            userPageOrderLayout.add(new Text(this.ascending == null ? "decreasing" : (this.ascending ? "ascending" : "decreasing")), this.ascending == null ? 2 : 1, 1);
             for (int i = 2; rs.next(); i++) {
                 String tmp = rs.getString(4);
                 tmp = tmp.replace(",",",\n");
 
-                g.add(new Text(rs.getString(1)), 0, i);
-                g.add(new Text(rs.getString(2)), 1, i);
-                g.add(new Text(rs.getString(3)), 2, i);
-                g.add(new Text(tmp), 3, i);
+                userPageOrderLayout.add(new Text(rs.getString(1)), 0, i);
+                userPageOrderLayout.add(new Text(rs.getString(2)), 1, i);
+                userPageOrderLayout.add(new Text(rs.getString(3)), 2, i);
+                userPageOrderLayout.add(new Text(tmp), 3, i);
             }
         } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(exception);
         }
 
-        g.setHgap(10);
-        g.setVgap(10);
-        g.setPadding(new Insets(10, 10, 10, 10));
-        g.setPrefWidth(450);
-        userPageOrdersLayout.setContent(g);
+        userPageOrderLayout.setHgap(10);
+        userPageOrderLayout.setVgap(10);
+        userPageOrderLayout.setPadding(new Insets(10, 10, 10, 10));
+        userPageOrderLayout.setPrefWidth(450);
+        userPageOrdersLayout.setContent(userPageOrderLayout);
         userPageOrdersLayout.setPrefWidth(450);
         userPageOrdersLayout.setMaxSize(450,500);
 
@@ -847,16 +845,16 @@ public class PizzeriaApplication extends Application {
         userPageLayout.setBottom(new BorderPane());
 
         this.user = new Scene(userPageLayout, 800, 512);
-        this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.user.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     /** Create statisticsPage
      */
     private void createStatisticsPage(){
-        BorderPane checkOutLayout = new BorderPane();
-        VBox checkOutPayLayout = new VBox();
-        HBox checkOutHMenuLayout = new HBox();
-        VBox checkOutVMenuLayout = new VBox();
+        BorderPane statisticsLayout = new BorderPane();
+        VBox statisticsPayLayout = new VBox();
+        HBox statisticsHMenuLayout = new HBox();
+        VBox statisticsVMenuLayout = new VBox();
 
         ImageView exitImg = null;
         ImageView cartImg = null;
@@ -864,7 +862,7 @@ public class PizzeriaApplication extends Application {
         ImageView userImg = null;
         try {
             FileInputStream input1 = new FileInputStream("src/resources/images/exit.png");
-            FileInputStream input3 = this.isAdmin ? new FileInputStream("src/resources/images/statistics.png") : new FileInputStream("src/resources/images/cart.png");
+            FileInputStream input3 = new FileInputStream("src/resources/images/statistics.png");
             FileInputStream input4 = new FileInputStream("src/resources/images/pizza.jpg");
             FileInputStream input5 = new FileInputStream("src/resources/images/user.png");
             exitImg = new ImageView(new Image(input1));
@@ -897,44 +895,44 @@ public class PizzeriaApplication extends Application {
         Button bUser = new Button("", userImg);
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
-            this.window.setScene(login);
+            this.window.setScene(this.login);
         });
         bCart.setOnAction(e -> {
             if (this.isAdmin) {
-                createStatisticsPage();
+                this.createStatisticsPage();
             } else {
-                createCheckOutPage();
+                this.createCheckOutPage();
             }
-            this.window.setScene(checkOut);
+            this.window.setScene(this.checkOut);
         });
         bPizza.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
         bUser.setOnAction(e -> {
             if (this.isAdmin){
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
             }else{
-                createUserPager();
+                this.createUserPager();
             }
-            this.window.setScene(user);
+            this.window.setScene(this.user);
         });
 
-        checkOutVMenuLayout.getChildren().add(bPizza);
-        checkOutVMenuLayout.getChildren().add(hFiller1);
-        checkOutVMenuLayout.getChildren().add(bCart);
-        checkOutVMenuLayout.getChildren().add(hFiller2);
-        checkOutVMenuLayout.getChildren().add(bExit);
+        statisticsVMenuLayout.getChildren().add(bPizza);
+        statisticsVMenuLayout.getChildren().add(hFiller1);
+        statisticsVMenuLayout.getChildren().add(bCart);
+        statisticsVMenuLayout.getChildren().add(hFiller2);
+        statisticsVMenuLayout.getChildren().add(bExit);
 
-        checkOutVMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(187, 153, 255), CornerRadii.EMPTY, Insets.EMPTY))));
-        checkOutHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
+        statisticsVMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(187, 153, 255), CornerRadii.EMPTY, Insets.EMPTY))));
+        statisticsHMenuLayout.setBackground((new Background(new BackgroundFill(Color.rgb(51, 204, 204), CornerRadii.EMPTY, Insets.EMPTY))));
 
-        checkOutHMenuLayout.getChildren().add(vFiller);
-        checkOutHMenuLayout.getChildren().add(bUser);
+        statisticsHMenuLayout.getChildren().add(vFiller);
+        statisticsHMenuLayout.getChildren().add(bUser);
 
         try{
-            database.readData("ORDERS", null, null, null, null , null);
-            ResultSet rs = database.getRs();
+            this.database.readData("ORDERS", null, null, null, null , null);
+            ResultSet rs = this.database.getRs();
             HashMap<String, Integer> unOrderedOrders = new HashMap<>();
             HashMap<String, Integer> unOrderedUsers = new HashMap<>();
 
@@ -1009,32 +1007,32 @@ public class PizzeriaApplication extends Application {
             userChart.setLegendSide(Side.BOTTOM);
 
             ScrollPane tmpLayout = new ScrollPane();
-            VBox tmptmpLayout = new VBox();
+            VBox chartsLayout = new VBox();
 
             tmpLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
             tmpLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
             tmpLayout.setMaxSize(700,500);
 
-            tmptmpLayout.getChildren().add(orderChart);
-            tmptmpLayout.getChildren().add(userChart);
+            chartsLayout.getChildren().add(orderChart);
+            chartsLayout.getChildren().add(userChart);
 
-            tmpLayout.setContent(tmptmpLayout);
+            tmpLayout.setContent(chartsLayout);
 
-            checkOutLayout.setCenter(tmpLayout);
+            statisticsLayout.setCenter(tmpLayout);
 
         } catch (SQLException exception){
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(exception);
         }
 
-        checkOutLayout.setTop(checkOutHMenuLayout);
-        checkOutLayout.setLeft(checkOutVMenuLayout);
-        checkOutLayout.setRight(checkOutPayLayout);
-        checkOutLayout.setBottom(new BorderPane());
+        statisticsLayout.setTop(statisticsHMenuLayout);
+        statisticsLayout.setLeft(statisticsVMenuLayout);
+        statisticsLayout.setRight(statisticsPayLayout);
+        statisticsLayout.setBottom(new BorderPane());
 
-        this.checkOut = new Scene(checkOutLayout, 800, 512);
-        this.checkOut.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.checkOut = new Scene(statisticsLayout, 800, 512);
+        this.checkOut.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     /** Create pizzaCreatorPage
@@ -1043,6 +1041,9 @@ public class PizzeriaApplication extends Application {
         BorderPane pizzaCreatorPageLayout = new BorderPane();
         HBox pizzaCreatorPageHMenuLayout = new HBox();
         VBox pizzaCreatorPageVMenuLayout = new VBox();
+        VBox pizzaCreatorPageFilterLayout = new VBox();
+        ScrollPane pizzaCreatorPageMainLayout = new ScrollPane();
+
         ImageView exitImg = null;
         ImageView cartImg = null;
         ImageView pizzaImg = null;
@@ -1090,27 +1091,27 @@ public class PizzeriaApplication extends Application {
 
         bExit.setOnAction(e -> {
             this.cart.removeEverything();
-            this.window.setScene(login);
+            this.window.setScene(this.login);
         });
         bCart.setOnAction(e -> {
             if (this.isAdmin) {
-                createStatisticsPage();
+                this.createStatisticsPage();
             } else {
-                createCheckOutPage();
+                this.createCheckOutPage();
             }
-            this.window.setScene(checkOut);
+            this.window.setScene(this.checkOut);
         });
         bPizza.setOnAction(e -> {
-            createHomePage();
-            this.window.setScene(home);
+            this.createHomePage();
+            this.window.setScene(this.home);
         });
         bUser.setOnAction(e -> {
             if (this.isAdmin){
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
             }else{
-                createUserPager();
+                this.createUserPager();
             }
-            this.window.setScene(user);
+            this.window.setScene(this.user);
         });
         bCreatePizza.setOnAction(e -> {
             String string = this.allowedItems.toString();
@@ -1135,15 +1136,15 @@ public class PizzeriaApplication extends Application {
                         return;
                     }
 
-                    database.readData("pizzas", "NAME = \"" + str + "\"", null, null, null, null);
+                    this.database.readData("pizzas", "NAME = \"" + str + "\"", null, null, null, null);
 
-                    ResultSet rs = database.getRs();
+                    ResultSet rs = this.database.getRs();
 
                     if (rs.isBeforeFirst()){
-                        database.updateData("pizzas", "PRICE" , str2, "NAME = \"" + str + "\"");
-                        database.updateData("pizzas", "TOPPINGS" , finalString, "NAME = \"" + str + "\"");
+                        this.database.updateData("pizzas", "PRICE" , str2, "NAME = \"" + str + "\"");
+                        this.database.updateData("pizzas", "TOPPINGS" , finalString, "NAME = \"" + str + "\"");
                     } else {
-                        database.writeData("pizzas",str + ";" + str2 + ";" + finalString);
+                        this.database.writeData("pizzas",str + ";" + str2 + ";" + finalString);
                     }
 
 
@@ -1152,16 +1153,16 @@ public class PizzeriaApplication extends Application {
                     System.out.println(exception);
                 }
                 this.allowedItems.clear();
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
                 dialogStage.close();
-                this.window.setScene(user);
+                this.window.setScene(this.user);
             });
 
             bCancel.setOnAction(ee -> {
                 this.allowedItems.clear();
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
                 dialogStage.close();
-                this.window.setScene(user);
+                this.window.setScene(this.user);
             });
 
             dialogBoxLayout.add(new Text("Pizza name:"), 0, 0);
@@ -1172,7 +1173,7 @@ public class PizzeriaApplication extends Application {
             dialogBoxLayout.add(bCancel, 0, 5);
 
             Scene stageScene = new Scene(dialogBoxLayout, 150, 150);
-            stageScene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+            stageScene.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
             dialogStage.setScene(stageScene);
             dialogStage.setTitle("PizzaCreator420");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -1197,31 +1198,31 @@ public class PizzeriaApplication extends Application {
                         return;
                     }
 
-                    database.readData("toppings", "NAME = \"" + str + "\"", null, null, null, null);
+                    this.database.readData("toppings", "NAME = \"" + str + "\"", null, null, null, null);
 
-                    ResultSet rs = database.getRs();
+                    ResultSet rs = this.database.getRs();
 
                     if (rs.isBeforeFirst()){
                         dialogStage.close();
                         return;
                     }
 
-                    database.writeData("toppings",str);
+                    this.database.writeData("toppings",str);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
                 }
                 this.allowedItems.clear();
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
                 dialogStage.close();
-                this.window.setScene(user);
+                this.window.setScene(this.user);
             });
 
             bCancel.setOnAction(ee -> {
                 this.allowedItems.clear();
-                createPizzaCreatorPage();
+                this.createPizzaCreatorPage();
                 dialogStage.close();
-                this.window.setScene(user);
+                this.window.setScene(this.user);
             });
             dialogBoxLayout.add(new Text("Topping name:"), 0, 0);
             dialogBoxLayout.add(nameField, 0, 1);
@@ -1229,7 +1230,7 @@ public class PizzeriaApplication extends Application {
             dialogBoxLayout.add(bCancel, 0, 3);
 
             Scene stageScene = new Scene(dialogBoxLayout, 150, 150);
-            stageScene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+            stageScene.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
             dialogStage.setScene(stageScene);
             dialogStage.setTitle("EpicToppingCreator");
             dialogStage.initModality(Modality.APPLICATION_MODAL);
@@ -1239,8 +1240,8 @@ public class PizzeriaApplication extends Application {
         bClear.setOnAction(e -> {
             this.allowedItems.clear();
             this.notAllowedItems.clear();
-            createPizzaCreatorPage();
-            this.window.setScene(user);
+            this.createPizzaCreatorPage();
+            this.window.setScene(this.user);
         });
 
         pizzaCreatorPageVMenuLayout.getChildren().add(bPizza);
@@ -1255,8 +1256,6 @@ public class PizzeriaApplication extends Application {
         pizzaCreatorPageHMenuLayout.getChildren().add(vFiller);
         pizzaCreatorPageHMenuLayout.getChildren().add(bUser);
 
-        VBox pizzaCreatorPageFilterLayout = new VBox();
-        ScrollPane pizzaCreatorPageMainLayout = new ScrollPane();
         pizzaCreatorPageMainLayout.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         pizzaCreatorPageMainLayout.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
@@ -1271,12 +1270,12 @@ public class PizzeriaApplication extends Application {
                 cb.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
                     if (cb.isSelected()) {
                         cb.setSelected(false);
-                        allowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
+                        this.allowedItems.remove(Integer.valueOf(Integer.parseInt(cb.getId())));
                     } else if (!cb.isSelected()) {
                         cb.setSelected(true);
                         cb.setIndeterminate(true);
                         cb.setAllowIndeterminate(true);
-                        allowedItems.add(Integer.parseInt(cb.getId()));
+                        this.allowedItems.add(Integer.parseInt(cb.getId()));
                     }
                 });
                 pizzaCreatorPageFilterLayout.getChildren().add(cb);
@@ -1296,7 +1295,7 @@ public class PizzeriaApplication extends Application {
         pizzaCreatorPageLayout.setBottom(new BorderPane());
 
         this.user = new Scene(pizzaCreatorPageLayout, 800, 512);
-        this.user.getStylesheets().add(Objects.requireNonNull(getClass().getResource("/bootstrap3.css")).toExternalForm());
+        this.user.getStylesheets().add(Objects.requireNonNull(this.getClass().getResource("/bootstrap3.css")).toExternalForm());
     }
 
     /** generate pizzas for the homePage
@@ -1309,7 +1308,7 @@ public class PizzeriaApplication extends Application {
         if (this.allowedItems.isEmpty() && this.notAllowedItems.isEmpty()) {
             if (!this.topFive){
                 try{
-                    database.readData("PIZZAS", null, true, "NAME", null , null);
+                    this.database.readData("PIZZAS", null, true, "NAME", null , null);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -1317,8 +1316,8 @@ public class PizzeriaApplication extends Application {
 
             }else{
                 try{
-                    database.readData("ORDERS", null, null, null, null , null);
-                    ResultSet rs = database.getRs();
+                    this.database.readData("ORDERS", null, null, null, null , null);
+                    ResultSet rs = this.database.getRs();
                     HashMap<String, Integer> unOrderedOrders = new HashMap<>();
                     while (rs.next()) {
                         String[] pizzas = rs.getString(4).split(",");
@@ -1344,7 +1343,7 @@ public class PizzeriaApplication extends Application {
                     }
                     bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
                     bobTheBuilder.append(");");
-                    database.readDataCustom(bobTheBuilder.toString());
+                    this.database.readDataCustom(bobTheBuilder.toString());
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -1378,7 +1377,7 @@ public class PizzeriaApplication extends Application {
             this.allowedItems.clear();
         }
 
-        ResultSet rs = database.getRs();
+        ResultSet rs = this.database.getRs();
 
         try{
             boolean left = false;
@@ -1412,7 +1411,7 @@ public class PizzeriaApplication extends Application {
                     } else {
                         try {
                             this.database.deleteData("pizzas","NAME=\"" + name + "\"");
-                            createHomePage();
+                            this.createHomePage();
                             this.window.setScene(this.home);
                         } catch (SQLException exception) {
                             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
@@ -1422,8 +1421,8 @@ public class PizzeriaApplication extends Application {
 
                 });
 
-                database.readData("TOPPINGS","TOPPINGID IN (" + toppingIds + ")",true, "NAME", null,null);
-                ResultSet rs2 = database.getRs();
+                this.database.readData("TOPPINGS","TOPPINGID IN (" + toppingIds + ")",true, "NAME", null,null);
+                ResultSet rs2 = this.database.getRs();
 
                 StringBuilder toppings = new StringBuilder();
 
@@ -1462,7 +1461,6 @@ public class PizzeriaApplication extends Application {
      */
     private static Map<String, Integer> sortByComparator(Map<String, Integer> unsortMap)
     {
-
         List<Map.Entry<String, Integer>> list = new LinkedList<>(unsortMap.entrySet());
 
         list.sort((o1, o2) -> o2.getValue().compareTo(o1.getValue()));
@@ -1478,7 +1476,7 @@ public class PizzeriaApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        window = primaryStage;
+        this.window = primaryStage;
         try{
             this.database = new Database();
         } catch (SQLException exception){
@@ -1486,11 +1484,11 @@ public class PizzeriaApplication extends Application {
             Platform.exit();
         }
 
-        window.setResizable(false);
-        setScenes();
-        window.setScene(login);
-        window.setTitle("Pizzeria");
-        window.show();
+        this.window.setResizable(false);
+        this.setScenes();
+        this.window.setScene(this.login);
+        this.window.setTitle("Pizzeria");
+        this.window.show();
     }
 
     @Override
@@ -1501,7 +1499,6 @@ public class PizzeriaApplication extends Application {
             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
             System.out.println(exception);
         }
-        System.out.println(allowedItems);
     }
 
     public static void main(String[] args) {

@@ -54,7 +54,7 @@ public class Cart {
     public void addItem(String name, int price){
         this.keys.add(name);
         this.values.add(price);
-        updatePrice();
+        this.updatePrice();
     }
 
     /** remove item from the lists
@@ -63,7 +63,7 @@ public class Cart {
     public void removeItem(String name){
         this.values.remove(this.keys.indexOf(name));
         this.keys.remove(name);
-        updatePrice();
+        this.updatePrice();
     }
 
     /** clear the lists
@@ -71,14 +71,14 @@ public class Cart {
     public void removeEverything(){
         this.values.clear();
         this.keys.clear();
-        updatePrice();
+        this.updatePrice();
     }
 
     /** update the value of sum
      */
     private void updatePrice(){
         this.sum = 0;
-        for (int value : values){
+        for (int value : this.values){
             this.sum += value;
         }
     }
@@ -86,9 +86,9 @@ public class Cart {
     @Override
     public String toString() {
         return "Cart{" +
-                "sum=" + sum +
-                ", items=" + keys +
-                ", " + values +
+                "sum=" + this.sum +
+                ", items=" + this.keys +
+                ", " + this.values +
                 '}';
     }
 }

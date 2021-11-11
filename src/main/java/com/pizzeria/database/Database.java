@@ -21,7 +21,7 @@ public class Database {
      * @return ResultSet which was the result of the previous SQL query
      */
     public ResultSet getRs() {
-        return rs;
+        return this.rs;
     }
 
     /** read Data from the database
@@ -39,7 +39,7 @@ public class Database {
                        + (from == null ? "" : " limit " + from + (offset == null ? "" : ", " + offset))
                        + ";";
 
-        Statement stmt = con.createStatement();
+        Statement stmt = this.con.createStatement();
         this.rs = stmt.executeQuery(query);
     }
 
@@ -48,7 +48,7 @@ public class Database {
      * @throws SQLException if the query was bad
      */
     public void readDataCustom(String query) throws SQLException {
-        Statement stmt = con.createStatement();
+        Statement stmt = this.con.createStatement();
         this.rs = stmt.executeQuery(query);
     }
 
