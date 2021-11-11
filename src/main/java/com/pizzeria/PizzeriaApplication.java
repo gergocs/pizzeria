@@ -2,8 +2,11 @@ package com.pizzeria;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -783,12 +786,32 @@ public class PizzeriaApplication extends Application {
             this.database.readData("orders","USERNAME = \"" + this.uname + "\"", this.ascending != null && this.ascending, this.ascending == null ? "PRICE" : "TIME", null, null);
             ResultSet rs = this.database.getRs();
             CheckBox cb = new CheckBox("");
+            Button bSave = new Button("Save");
+
             cb.allowIndeterminateProperty();
             if (this.ascending == null){
                 cb.setIndeterminate(true);
             } else {
                 cb.setSelected(this.ascending);
             }
+
+            bSave.setOnAction(e ->{
+                try {
+                    this.database.readData("orders","USERNAME = \"" + this.uname + "\"", this.ascending != null && this.ascending, this.ascending == null ? "PRICE" : "TIME", null, null);
+                    ResultSet rs2 = this.database.getRs();
+                    PrintWriter writer = new PrintWriter(this.uname, StandardCharsets.UTF_8);
+
+                    writer.println("Time                Price  Items");
+                    while (rs2.next()){
+                        writer.println(rs2.getString(2) + " " + rs2.getString(3) + "  " + (rs2.getString(3).length() == 4 ? " " : "") + rs2.getString(4));
+                    }
+
+                    writer.close();
+                } catch (IOException | SQLException exception) {
+                    System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
+                    System.out.println(exception);
+                }
+            });
 
             cb.addEventHandler(MouseEvent.MOUSE_RELEASED, e -> {
                 if (cb.isIndeterminate()) {
@@ -812,7 +835,8 @@ public class PizzeriaApplication extends Application {
             userPageOrderLayout.add(new Text("Time"), 1, 0);
             userPageOrderLayout.add(new Text("Price"), 2, 0);
             userPageOrderLayout.add(new Text("Items"), 3, 0);
-            userPageOrderLayout.add(cb, 4, 0);
+            userPageOrderLayout.add(bSave, 4, 0);
+            userPageOrderLayout.add(cb, 4, 1);
             userPageOrderLayout.add(new Text(this.ascending == null ? "decreasing" : (this.ascending ? "ascending" : "decreasing")), this.ascending == null ? 2 : 1, 1);
             for (int i = 2; rs.next(); i++) {
                 String tmp = rs.getString(4);
