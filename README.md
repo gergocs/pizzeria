@@ -14,11 +14,11 @@ A program egy pizzéria adatbázisával való kommunikációt valósít meg. A p
 |**Relációs adatbázisséma**|
 | - |
 Ügyfelek (Felhasználónév, Telefonszám, Szállítási cím, jelszó, Jogosultság);
-
+| - |
 Feltétek (feltetID, Név);
-
+| - |
 Pizzák (pizzaID, Név, Ár, *Feltétek*);
-
+| - |
 Rendelések (Felhasználónév, Mikor, Mit, Ár);
 
 |**Normálforma**|
