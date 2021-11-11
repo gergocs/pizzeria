@@ -8,9 +8,6 @@ Adatbázisok kötelező feladat
 
 A program egy pizzéria adatbázisával való kommunikációt valósít meg. A program segítségével van lehetőség rendelést leadni. Fiókot létrehozni. Korábban leadott rendelések lekérdezése. Új pizzák hozzáadása (Ha meg van hozzá a megfelelő jogosultság), korábban felvett pizzák módosítása, törlése. Felhasználó törlése.
 
-|**Egyed-kapcsolat modell**|
-| - |
-
 |**Relációs adatbázisséma**|
 | - |
 |Ügyfelek (Felhasználónév, Telefonszám, Szállítási cím, jelszó, Jogosultság);|
