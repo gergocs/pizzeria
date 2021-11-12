@@ -660,7 +660,7 @@ public class PizzeriaApplication extends Application {
             if (!tFieldUserName.getText().equals("")){
                     try {
                         this.database.readData("CLIENTS",
-                                "USERNAME=\"" + this.uname + "\"",
+                                "USERNAME=\"" + tFieldUserName.getText() + "\"",
                                 null,
                                 null,
                                 null,
@@ -675,7 +675,16 @@ public class PizzeriaApplication extends Application {
                     }
                 if (this.errorMessage.equals("")){
                     try{
+                        this.database.readDataCustom("SET foreign_key_checks = 0;");
                         this.database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"", null);
+                        this.database.readData("orders","USERNAME = \"" + this.uname + "\"", null, null, null, null);
+                        ResultSet rs = this.database.getRs();
+                        while (rs.next()) {
+                            this.database.updateData("orders","USERNAME", tFieldUserName.getText(), "USERNAME = \"" +  rs.getString(1) + "\" and TIME = \"" + rs.getString(2) + "\"", null);
+                            System.out.println("Alma");
+                        }
+                        this.database.readDataCustom("SET foreign_key_checks = 1;");
+                        this.uname = tFieldUserName.getText();
                     } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
@@ -696,7 +705,7 @@ public class PizzeriaApplication extends Application {
                 }
                 if (this.errorMessage.equals("")){
                     try{
-                        this.database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"", null);
+                        this.database.updateData("clients", "PWD", tFieldPassword.getText(), "USERNAME = \"" + this.uname + "\"", null);
                     } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
@@ -806,7 +815,32 @@ public class PizzeriaApplication extends Application {
 
                     writer.println("Time                Price  Items");
                     while (rs2.next()){
-                        writer.println(rs2.getString(2) + " " + rs2.getString(3) + "  " + (rs2.getString(3).length() == 4 ? " " : "") + rs2.getString(4));
+                        this.database.readData("orderpizzas","TIME = \"" + rs2.getString(2) + "\";", null, null, null, null);
+
+                        ResultSet rs3 = this.database.getRs();
+
+                        StringBuilder bobTheBuilder = new StringBuilder();
+
+                        bobTheBuilder.append("select NAME from pizzas where PIZZAID in (");
+
+                        while (rs3.next()) {
+                            bobTheBuilder.append("\"").append(rs3.getString(2)).append("\",");
+                        }
+
+                        bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
+                        bobTheBuilder.append(");");
+
+                        this.database.readDataCustom(bobTheBuilder.toString());
+                        rs3 = this.database.getRs();
+
+                        bobTheBuilder.delete(0, bobTheBuilder.length());
+
+                        while (rs3.next()) {
+                            bobTheBuilder.append(rs3.getString(1)).append(",");
+                        }
+
+                        bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
+                        writer.println(rs2.getString(2) + " " + rs2.getString(3) + "  " + (rs2.getString(3).length() == 4 ? " " : "") + bobTheBuilder);
                     }
 
                     writer.close();
@@ -842,7 +876,34 @@ public class PizzeriaApplication extends Application {
             userPageOrderLayout.add(cb, 4, 1);
             userPageOrderLayout.add(new Text(this.ascending == null ? "decreasing" : (this.ascending ? "ascending" : "decreasing")), this.ascending == null ? 2 : 1, 1);
             for (int i = 2; rs.next(); i++) {
-                String tmp = rs.getString(4);
+
+                this.database.readData("orderpizzas","TIME = \"" + rs.getString(2) + "\";", null, null, null, null);
+
+                ResultSet rs2 = this.database.getRs();
+
+                StringBuilder bobTheBuilder = new StringBuilder();
+
+                bobTheBuilder.append("select NAME from pizzas where PIZZAID in (");
+
+                while (rs2.next()) {
+                    bobTheBuilder.append("\"").append(rs2.getString(2)).append("\",");
+                }
+
+                bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
+                bobTheBuilder.append(");");
+
+                this.database.readDataCustom(bobTheBuilder.toString());
+                rs2 = this.database.getRs();
+
+                bobTheBuilder.delete(0, bobTheBuilder.length());
+
+                while (rs2.next()) {
+                    bobTheBuilder.append(rs2.getString(1)).append(",");
+                }
+
+                bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
+
+                String tmp = bobTheBuilder.toString();
                 tmp = tmp.replace(",",",\n");
 
                 userPageOrderLayout.add(new Text(rs.getString(1)), 0, i);
@@ -958,30 +1019,42 @@ public class PizzeriaApplication extends Application {
         statisticsHMenuLayout.getChildren().add(bUser);
 
         try{
-            this.database.readData("ORDERS", null, null, null, null , null);
+            this.database.readData("orderpizzas", null, null, null, null , null);
             ResultSet rs = this.database.getRs();
             HashMap<String, Integer> unOrderedOrders = new HashMap<>();
-            HashMap<String, Integer> unOrderedUsers = new HashMap<>();
 
             int sumOrders = 0;
+
+            while (rs.next()) {
+                this.database.readDataCustom("select NAME from pizzas where PIZZAID = " + rs.getInt(2) + ";");
+                ResultSet rs2 = this.database.getRs();
+                rs2.next();
+
+                sumOrders++;
+                if (unOrderedOrders.containsKey(rs2.getString(1))) {
+                    unOrderedOrders.put(rs2.getString(1), unOrderedOrders.get(rs2.getString(1)) + 1);
+                } else {
+                    unOrderedOrders.put(rs2.getString(1), 1);
+                }
+            }
+
+            this.database.readData("ORDERS", null, null, null, null , null);
+            rs = this.database.getRs();
+
+            HashMap<String, Integer> unOrderedUsers = new HashMap<>();
+
             int sumUsers = 0;
             while (rs.next()) {
-                String[] pizzas = rs.getString(4).split(",");
-                if (unOrderedUsers.containsKey(rs.getString(1))) {
-                    unOrderedUsers.put(rs.getString(1), unOrderedUsers.get(rs.getString(1)) + pizzas.length - 1);
-                } else {
-                    unOrderedUsers.put(rs.getString(1), pizzas.length - 1);
-                }
-                sumUsers += pizzas.length - 1;
+                this.database.readDataCustom("select COUNT(TIME) from orderpizzas where TIME = \""+ rs.getString(2) +"\"; ");
+                ResultSet rs2 = this.database.getRs();
+                rs2.next();
 
-                for (String pizza : pizzas) {
-                    sumOrders++;
-                    if (unOrderedOrders.containsKey(pizza)) {
-                        unOrderedOrders.put(pizza, unOrderedOrders.get(pizza) + 1);
-                    } else {
-                        unOrderedOrders.put(pizza, 1);
-                    }
+                if (unOrderedUsers.containsKey(rs.getString(1))) {
+                    unOrderedUsers.put(rs.getString(1), unOrderedUsers.get(rs.getString(1)) + rs2.getInt(1));
+                } else {
+                    unOrderedUsers.put(rs.getString(1), rs2.getInt(1));
                 }
+                sumUsers += rs2.getInt(1);
             }
 
             ObservableList<PieChart.Data> pieChartOrders = FXCollections.observableArrayList();
@@ -1346,7 +1419,7 @@ public class PizzeriaApplication extends Application {
         if (this.allowedItems.isEmpty() && this.notAllowedItems.isEmpty()) {
             if (!this.topFive){
                 try{
-                    this.database.readData("PIZZAS", null, true, "NAME", null , null);
+                    this.database.readData("pizzas", null, true, "NAME", null , null);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -1354,21 +1427,33 @@ public class PizzeriaApplication extends Application {
 
             }else{
                 try{
-                    this.database.readData("ORDERS", null, null, null, null , null);
+                    this.database.readData("orderpizzas", null, null, null, null , null);
                     ResultSet rs = this.database.getRs();
+
+                    StringBuilder bobTheBuilder = new StringBuilder();
+
+                    bobTheBuilder.append("select NAME from pizzas where PIZZAID in (");
+
+                    while(rs.next()){
+                        bobTheBuilder.append(rs.getString(2)).append(",");
+                    }
+
+                    bobTheBuilder.deleteCharAt(bobTheBuilder.length() - 1);
+                    bobTheBuilder.append(");");
+
+                    this.database.readDataCustom(bobTheBuilder.toString());
+                    rs = this.database.getRs();
+
                     HashMap<String, Integer> unOrderedOrders = new HashMap<>();
                     while (rs.next()) {
-                        String[] pizzas = rs.getString(4).split(",");
-                        for (String pizza : pizzas) {
-                            if (unOrderedOrders.containsKey(pizza)) {
-                                unOrderedOrders.put(pizza, unOrderedOrders.get(pizza) + 1);
-                            } else {
-                                unOrderedOrders.put(pizza, 1);
-                            }
+                        if (unOrderedOrders.containsKey(rs.getString(1))) {
+                            unOrderedOrders.put(rs.getString(1), unOrderedOrders.get(rs.getString(1)) + 1);
+                        } else {
+                            unOrderedOrders.put(rs.getString(1), 1);
                         }
                     }
                     Map<String, Integer> sortedMapDsc = sortByComparator(unOrderedOrders);
-                    StringBuilder bobTheBuilder = new StringBuilder();
+                    bobTheBuilder = new StringBuilder();
                     bobTheBuilder.append("select * from pizzas where NAME in (");
                     int counter = 0;
                     for (Map.Entry<String, Integer> entry : sortedMapDsc.entrySet()){
@@ -1391,22 +1476,58 @@ public class PizzeriaApplication extends Application {
             }
 
         } else {
-            StringBuilder bobTheBuilder = new StringBuilder();
-            bobTheBuilder.append("select * from PIZZAS where TOPPINGS REGEXP ");
+            StringBuilder[] bobTheBuilderGroup1 = new StringBuilder[this.allowedItems.size()];
+            StringBuilder[] bobTheBuilderGroup2 = new StringBuilder[this.notAllowedItems.size()];
+            StringBuilder bobTheBigChunkyBoyBuilder = new StringBuilder();
 
-            for (int i = 0; i < this.allowedItems.size(); i++) {
-                bobTheBuilder.append("'([^0-9]|^)").append(this.allowedItems.get(i)).append("([^0-9]|$)'");
-                if (i + 1 < this.allowedItems.size()){
-                    bobTheBuilder.append(" and TOPPINGS REGEXP ");
+            for (int i = 0; i < this.allowedItems.size(); i++){
+                bobTheBuilderGroup1[i] = new StringBuilder();
+                bobTheBuilderGroup1[i].append("select PIZZAID from pizzatoppings where TOPPINGID = ").append(this.allowedItems.get(i)).append(" and PIZZAID IN (");
+            }
+
+            for (StringBuilder builder : bobTheBuilderGroup1) {
+                bobTheBigChunkyBoyBuilder.append(builder);
+            }
+            if (!this.allowedItems.isEmpty()){
+                bobTheBigChunkyBoyBuilder.delete(bobTheBigChunkyBoyBuilder.length() - 17, bobTheBigChunkyBoyBuilder.length());
+                if (!this.notAllowedItems.isEmpty()){
+                    bobTheBigChunkyBoyBuilder.append(" and PIZZAID NOT IN (");
                 }
             }
-            for (Integer notAllowedItem : this.notAllowedItems) {
-                bobTheBuilder.append(" and TOPPINGS NOT REGEXP ").append("'([^0-9]|^)").append(notAllowedItem).append("([^0-9]|$)'");
+
+            for (int i = 0; i < this.notAllowedItems.size(); i++){
+                bobTheBuilderGroup2[i] = new StringBuilder();
+                bobTheBuilderGroup2[i].append("select PIZZAID from pizzatoppings where TOPPINGID = ").append(this.notAllowedItems.get(i)).append(" and PIZZAID NOT IN (");
             }
-            bobTheBuilder.append(";");
+
+            for (StringBuilder stringBuilder : bobTheBuilderGroup2) {
+                bobTheBigChunkyBoyBuilder.append(stringBuilder);
+            }
+
+            if (!this.notAllowedItems.isEmpty()){
+                bobTheBigChunkyBoyBuilder.delete(bobTheBigChunkyBoyBuilder.length() - 21, bobTheBigChunkyBoyBuilder.length());
+            }
+
+
+            bobTheBigChunkyBoyBuilder.append(")".repeat(Math.max(0, bobTheBuilderGroup1.length + bobTheBuilderGroup2.length - 1)));
+            bobTheBigChunkyBoyBuilder.append(";");
+
+
             try{
-                this.database.readDataCustom(bobTheBuilder.toString());
-            } catch (SQLException exception){
+                this.database.readDataCustom(bobTheBigChunkyBoyBuilder.toString());
+                ResultSet rs = this.database.getRs();
+
+                bobTheBigChunkyBoyBuilder.delete(0, bobTheBigChunkyBoyBuilder.length());
+                bobTheBigChunkyBoyBuilder.append("select * from pizzas where PIZZAID in (");
+
+                while (rs.next()) {
+                    bobTheBigChunkyBoyBuilder.append(rs.getInt(1)).append(",");
+                }
+                bobTheBigChunkyBoyBuilder.deleteCharAt(bobTheBigChunkyBoyBuilder.length() - 1);
+                bobTheBigChunkyBoyBuilder.append(");");
+
+                this.database.readDataCustom(bobTheBigChunkyBoyBuilder.toString());
+            } catch (SQLException exception) {
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                 System.out.println(exception);
             }
@@ -1441,8 +1562,18 @@ public class PizzeriaApplication extends Application {
                 }
                 String name = rs.getString(2);
                 int price = rs.getInt(3);
-                Blob blob = rs.getBlob(5);
-                String toppingIds = rs.getString(4).replace(";",",");
+                Blob blob = rs.getBlob(4);
+
+                this.database.readDataCustom("select TOPPINGID from pizzatoppings where PIZZAID = " + rs.getInt(1));
+                ResultSet rs3 = this.database.getRs();
+
+                StringBuilder bobTheBuilder = new StringBuilder();
+
+                while (rs3.next()){
+                    bobTheBuilder.append(rs3.getString(1)).append(", ");
+                }
+
+                bobTheBuilder.delete(bobTheBuilder.length() - 2, bobTheBuilder.length());
 
                 ImageView pizzaImg = null;
 
@@ -1459,18 +1590,25 @@ public class PizzeriaApplication extends Application {
                         this.cart.addItem(name, price);
                     } else {
                         try {
-                            this.database.deleteData("pizzas","NAME=\"" + name + "\"");
+                            this.database.readDataCustom("select PIZZAID from pizzas where NAME = \"" + name + "\";");
+                            ResultSet rs4 = this.database.getRs();
+
+                            rs4.next();
+
+                            this.database.deleteData("pizzatoppings","PIZZAID = " + rs4.getInt(1));
+                            this.database.deleteData("pizzas","PIZZAID = " + rs4.getInt(1) + ";");
                             this.createHomePage();
                             this.window.setScene(this.home);
                         } catch (SQLException exception) {
                             System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                             System.out.println(exception);
+                            exception.printStackTrace();
                         }
                     }
 
                 });
 
-                this.database.readData("TOPPINGS","TOPPINGID IN (" + toppingIds + ")",true, "NAME", null,null);
+                this.database.readData("TOPPINGS","TOPPINGID IN (" + bobTheBuilder + ")",true, "NAME", null,null);
                 ResultSet rs2 = this.database.getRs();
 
                 StringBuilder toppings = new StringBuilder();

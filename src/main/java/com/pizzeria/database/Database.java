@@ -63,9 +63,13 @@ public class Database {
         String[] values = data.split(";");
         PreparedStatement preparedStmt = null;
         String clientsQuery = "insert into clients (USERNAME, PWD, PHONENUMBER, ADDRESS) values (?, ?, ?, ?)";
-        String ordersQuery = "insert into orders (USERNAME, TIME, PRICE, PRODUCTS) values (?, ?, ?, ?)";
+        String ordersQuery = "insert into orders (USERNAME, TIME, PRICE) values (?, ?, ?)";
         String toppingsQuery = "insert into toppings (NAME) values (?)";
-        String pizzasQuery = "insert into pizzas (NAME, PRICE, TOPPINGS, IMAGE) values (?, ?, ?, ?)";
+        String pizzasQuery = "insert into pizzas (NAME, PRICE, IMAGE) values (?, ?, ?)";
+        String pizzatoppingsQuery = "insert into pizzatoppings (PIZZAID, TOPPINGID) values (?, ?)";
+        String orderPizzasQuery = "insert into orderpizzas (TIME, PIZZAID) values (?, ?)";
+        java.util.Date dt = new java.util.Date();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         switch (table) {
             case "clients" -> {
                 preparedStmt = this.con.prepareStatement(clientsQuery);
@@ -76,19 +80,15 @@ public class Database {
             }
             case "orders" -> {
                 preparedStmt = this.con.prepareStatement(ordersQuery);
-                java.util.Date dt = new java.util.Date();
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
                 preparedStmt.setString(1, values[0]);
                 preparedStmt.setString(2, sdf.format(dt));
                 preparedStmt.setString(3, values[1]);
-                preparedStmt.setString(4, values[2]);
             }
             case "pizzas" -> {
                 preparedStmt = this.con.prepareStatement(pizzasQuery);
                 preparedStmt.setString(1, values[0]);
                 preparedStmt.setInt(2, Integer.parseInt(values[1]));
-                preparedStmt.setString(3, values[2].replace(", ", ";"));
-                preparedStmt.setBlob(4, image);
+                preparedStmt.setBlob(3, image);
             }
             case "toppings" -> {
                 preparedStmt = this.con.prepareStatement(toppingsQuery);
@@ -98,6 +98,39 @@ public class Database {
 
         assert preparedStmt != null;
         preparedStmt.execute();
+
+        if (table.equals("pizzas")){
+            preparedStmt = this.con.prepareStatement(pizzatoppingsQuery);
+
+            this.readDataCustom("select PIZZAID from pizzas WHERE NAME = \"" + values[0] + "\";");
+            this.rs.next();
+
+            int id = this.rs.getInt(1);
+
+            String[] toppings = values[2].split(", ");
+
+            for (String topping : toppings) {
+                this.readDataCustom("select TOPPINGID from toppings WHERE TOPPINGID = " + topping + ";");
+                this.rs.next();
+
+                preparedStmt.setInt(1, id);
+                preparedStmt.setInt(2, this.rs.getInt(1));
+                preparedStmt.execute();
+            }
+        } else if (table.equals("orders")){
+            preparedStmt = this.con.prepareStatement(orderPizzasQuery);
+
+            String[] products = values[2].split(",");
+
+            for (String product : products){
+                this.readDataCustom("select PIZZAID from pizzas WHERE NAME = \"" + product + "\";");
+                this.rs.next();
+
+                preparedStmt.setString(1, sdf.format(dt));
+                preparedStmt.setInt(2, this.rs.getInt(1));
+                preparedStmt.execute();
+            }
+        }
     }
 
     /** update data in the database
