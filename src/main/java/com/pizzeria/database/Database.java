@@ -57,6 +57,7 @@ public class Database {
      * @param data the data to write to table
      *             example:
      *             a;b;c
+     * @param image if the table is pizzas then this argument must be present
      * @throws SQLException if the query was bad
      */
     public void writeData(String table, String data, Blob image) throws SQLException {
@@ -138,6 +139,7 @@ public class Database {
      * @param column the column which identifies the data what you want to update
      * @param value the new value of the column
      * @param condition the where clause of the SQL query
+     * @param blob if the table is pizzas then this argument must be present
      * @throws SQLException if the query was bad
      */
     public void updateData(String table, String column, String value, String condition, Blob blob) throws SQLException {
