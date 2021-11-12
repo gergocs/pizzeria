@@ -59,13 +59,13 @@ public class Database {
      *             a;b;c
      * @throws SQLException if the query was bad
      */
-    public void writeData(String table, String data) throws SQLException {
+    public void writeData(String table, String data, Blob image) throws SQLException {
         String[] values = data.split(";");
         PreparedStatement preparedStmt = null;
         String clientsQuery = "insert into clients (USERNAME, PWD, PHONENUMBER, ADDRESS) values (?, ?, ?, ?)";
         String ordersQuery = "insert into orders (USERNAME, TIME, PRICE, PRODUCTS) values (?, ?, ?, ?)";
         String toppingsQuery = "insert into toppings (NAME) values (?)";
-        String pizzasQuery = "insert into pizzas (NAME, PRICE, TOPPINGS) values (?, ?, ?)";
+        String pizzasQuery = "insert into pizzas (NAME, PRICE, TOPPINGS, IMAGE) values (?, ?, ?, ?)";
         switch (table) {
             case "clients" -> {
                 preparedStmt = this.con.prepareStatement(clientsQuery);
@@ -88,6 +88,7 @@ public class Database {
                 preparedStmt.setString(1, values[0]);
                 preparedStmt.setInt(2, Integer.parseInt(values[1]));
                 preparedStmt.setString(3, values[2].replace(", ", ";"));
+                preparedStmt.setBlob(4, image);
             }
             case "toppings" -> {
                 preparedStmt = this.con.prepareStatement(toppingsQuery);
@@ -106,11 +107,13 @@ public class Database {
      * @param condition the where clause of the SQL query
      * @throws SQLException if the query was bad
      */
-    public void updateData(String table, String column, String value, String condition) throws SQLException {
+    public void updateData(String table, String column, String value, String condition, Blob blob) throws SQLException {
         String query = "update LOW_PRIORITY " + table + " set " + column + " = ? where " + condition;
         PreparedStatement preparedStmt = this.con.prepareStatement(query);
         if (Objects.equals(column, "PRICE")){
             preparedStmt.setInt(1, Integer.parseInt(value));
+        } else if (Objects.equals(column, "IMAGE")) {
+            preparedStmt.setBlob(1, blob);
         } else {
             preparedStmt.setString(1, Objects.equals(column, "PWD") ? DigestUtils.shaHex(value) : (Objects.equals(column, "TOPPINGS") ? value.replace(", ", ";") : value));
         }

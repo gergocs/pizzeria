@@ -9,6 +9,8 @@ module com.pizzeria.pizzeria {
     requires java.sql;
     requires mysql.connector.java;
     requires commons.codec;
+    requires org.apache.commons.io;
+    requires java.sql.rowset;
 
     opens com.pizzeria to javafx.fxml;
     exports com.pizzeria;

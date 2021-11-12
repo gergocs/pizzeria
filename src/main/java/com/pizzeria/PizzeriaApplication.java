@@ -1,12 +1,11 @@
 package com.pizzeria;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
+import javax.sql.rowset.serial.SerialBlob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -28,10 +27,12 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 
 import com.pizzeria.cart.Cart;
 import com.pizzeria.database.Database;
@@ -186,7 +187,7 @@ public class PizzeriaApplication extends Application {
                 return;
             }
             try{
-                this.database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address);
+                this.database.writeData("clients",uname+";"+password+";"+phoneNumber+";"+address, null);
             } catch (SQLException exception){
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                 System.out.println(exception);
@@ -479,7 +480,7 @@ public class PizzeriaApplication extends Application {
         });
         bPay.setOnAction(e -> {
             try{
-                this.database.writeData("orders", this.uname + ";" + this.cart.getPrice() + ";" + this.cart.getItemAsString());
+                this.database.writeData("orders", this.uname + ";" + this.cart.getPrice() + ";" + this.cart.getItemAsString(), null);
             } catch (SQLException exception){
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                 System.out.println(exception);
@@ -674,7 +675,7 @@ public class PizzeriaApplication extends Application {
                     }
                 if (this.errorMessage.equals("")){
                     try{
-                        this.database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                        this.database.updateData("clients", "USERNAME", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"", null);
                     } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
@@ -695,7 +696,7 @@ public class PizzeriaApplication extends Application {
                 }
                 if (this.errorMessage.equals("")){
                     try{
-                        this.database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"");
+                        this.database.updateData("clients", "PWD", tFieldUserName.getText(), "USERNAME = \"" + this.uname + "\"", null);
                     } catch (SQLException exception){
                         System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                         System.out.println(exception);
@@ -704,7 +705,7 @@ public class PizzeriaApplication extends Application {
             }
             if (!tFieldPhoneNumber.getText().equals("")){
                 try{
-                    this.database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"");
+                    this.database.updateData("clients", "PHONENUMBER", tFieldPhoneNumber.getText(), "USERNAME = \"" + this.uname + "\"", null);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -712,7 +713,7 @@ public class PizzeriaApplication extends Application {
             }
             if (!tFieldAddress.getText().equals("")){
                 try{
-                    this.database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"");
+                    this.database.updateData("clients", "ADDRESS", tFieldAddress.getText(), "USERNAME = \"" + this.uname + "\"", null);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -728,11 +729,13 @@ public class PizzeriaApplication extends Application {
 
         bDelete.setOnAction(e -> {
             try {
+                this.database.readDataCustom("SET foreign_key_checks = 0;");
                 this.database.readData("orders","USERNAME = \"" + this.uname + "\"", true, "TIME", null, null);
                 ResultSet rs = this.database.getRs();
                 while (rs.next()) {
-                    this.database.updateData("orders","USERNAME", this.uname + "[DELETED]", "USERNAME = \"" +  rs.getString(1) + "\" and TIME = \"" + rs.getString(2) + "\"");
+                    this.database.updateData("orders","USERNAME", this.uname + "[DELETED]", "USERNAME = \"" +  rs.getString(1) + "\" and TIME = \"" + rs.getString(2) + "\"", null);
                 }
+                this.database.readDataCustom("SET foreign_key_checks = 1;");
             } catch (SQLException exception){
                 System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                 System.out.println(exception);
@@ -1160,19 +1163,30 @@ public class PizzeriaApplication extends Application {
                         return;
                     }
 
-                    this.database.readData("pizzas", "NAME = \"" + str + "\"", null, null, null, null);
+                    final FileChooser fileChooser = new FileChooser();
+                    fileChooser.setTitle("SexyPizzaImageSelector2000");
+                    fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("Image Files", "*.png", "*jpg"));
+                    File file = fileChooser.showOpenDialog(dialogStage);
 
-                    ResultSet rs = this.database.getRs();
+                    if (file != null){
+                        byte[] fileContent = FileUtils.readFileToByteArray(file);
 
-                    if (rs.isBeforeFirst()){
-                        this.database.updateData("pizzas", "PRICE" , str2, "NAME = \"" + str + "\"");
-                        this.database.updateData("pizzas", "TOPPINGS" , finalString, "NAME = \"" + str + "\"");
-                    } else {
-                        this.database.writeData("pizzas",str + ";" + str2 + ";" + finalString);
+                        Blob blob = new SerialBlob(fileContent);
+
+                        this.database.readData("pizzas", "NAME = \"" + str + "\"", null, null, null, null);
+
+                        ResultSet rs = this.database.getRs();
+
+                        if (rs.isBeforeFirst()){
+                            this.database.updateData("pizzas", "PRICE", str2, "NAME = \"" + str + "\"", null);
+                            this.database.updateData("pizzas", "TOPPINGS", finalString, "NAME = \"" + str + "\"", null);
+                            this.database.updateData("pizzas", "IMAGE", null, "NAME = \"" + str + "\"", blob);
+                        } else {
+                            this.database.writeData("pizzas",str + ";" + str2 + ";" + finalString, blob);
+                        }
                     }
 
-
-                } catch (SQLException exception){
+                } catch (SQLException | IOException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
                 }
@@ -1231,7 +1245,7 @@ public class PizzeriaApplication extends Application {
                         return;
                     }
 
-                    this.database.writeData("toppings",str);
+                    this.database.writeData("toppings",str, null);
                 } catch (SQLException exception){
                     System.out.println("Senpai Okotte wa ikemasenga, erā ga hassei shimashita");
                     System.out.println(exception);
@@ -1326,8 +1340,8 @@ public class PizzeriaApplication extends Application {
      */
     private GridPane generateItems() {
         GridPane gridItems = new GridPane();
-        gridItems.setHgap(100);
-        gridItems.setVgap(100);
+        gridItems.setHgap(20);
+        gridItems.setVgap(20);
         gridItems.setPadding(new Insets(10, 10, 10, 10));
         if (this.allowedItems.isEmpty() && this.notAllowedItems.isEmpty()) {
             if (!this.topFive){
@@ -1415,7 +1429,7 @@ public class PizzeriaApplication extends Application {
                     System.out.println(exception);
                 }
                 assert fileInputStream != null;
-                BorderPane item = new BorderPane();
+                VBox item = new VBox();
                 ImageView addToCartImg = new ImageView(new Image(fileInputStream));
                 addToCartImg.setFitHeight(50);
                 addToCartImg.setFitWidth(50);
@@ -1427,7 +1441,18 @@ public class PizzeriaApplication extends Application {
                 }
                 String name = rs.getString(2);
                 int price = rs.getInt(3);
+                Blob blob = rs.getBlob(5);
                 String toppingIds = rs.getString(4).replace(";",",");
+
+                ImageView pizzaImg = null;
+
+                if (blob != null) {
+                    InputStream in = blob.getBinaryStream();
+                    pizzaImg = new ImageView(new Image(in));
+                    pizzaImg.setFitHeight(100);
+                    pizzaImg.setFitWidth(200);
+                }
+
 
                 addToCart.setOnAction(e -> {
                     if (!this.isAdmin){
@@ -1464,8 +1489,7 @@ public class PizzeriaApplication extends Application {
                 toppings.deleteCharAt(toppings.length() - 1);
                 toppings.deleteCharAt(toppings.length() - 1);
 
-                item.setTop(new Text(name + " " + price + " Ft\n" + toppings));
-                item.setBottom(addToCart);
+                item.getChildren().addAll(new Text(name + " " + price + " Ft\n" + toppings), pizzaImg, addToCart);
 
                 gridItems.add(item, (left ? 1 : 0), lineCounter);
                 left = !left;
